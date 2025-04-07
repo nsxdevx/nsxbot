@@ -2,6 +2,38 @@ package types
 
 import "encoding/json"
 
+type MeaasgeChain []Message
+
+func (m MeaasgeChain) append(msg Message) MeaasgeChain {
+	return append(m, msg)
+}
+
+func (m MeaasgeChain) Text(text string) MeaasgeChain {
+	data, err := json.Marshal(Text{
+		Text: text,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "text",
+		Data: data,
+	})
+}
+
+func (m MeaasgeChain) Face(id string) MeaasgeChain {
+	data, err := json.Marshal(Face{
+		Id: id,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "face",
+		Data: data,
+	})
+}
+
 type Message struct {
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`

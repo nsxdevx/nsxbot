@@ -56,8 +56,8 @@ type EventMessage struct {
 }
 
 var (
-    ErrNotFound          = errors.New("not found")
-    ErrTypeAssertion     = errors.New("type assertion failed")
+	ErrNotFound      = errors.New("not found")
+	ErrTypeAssertion = errors.New("type assertion failed")
 )
 
 func (em *EventMessage) TextFirst() (*Text, error) {

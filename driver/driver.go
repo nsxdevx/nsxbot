@@ -18,6 +18,7 @@ type Listener interface {
 }
 
 type Emitter interface {
+	SendPrivateMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	Raw(ctx context.Context, action types.Action, params any) ([]byte, error)
 }

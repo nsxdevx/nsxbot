@@ -84,7 +84,7 @@ func (l *HttpListener) Listen(ctx context.Context, eventChan chan<- types.Event)
 		defer shutdownCancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			l.log.Error("http server shutdown error", "err", err)
-			return 
+			return
 		}
 	}()
 	return server.ListenAndServe()
@@ -131,6 +131,12 @@ func (e *HttpEmitter) Raw(ctx context.Context, action types.Action, params any) 
 	return body, nil
 }
 
+func (e *HttpEmitter) SendPrivateMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, types.ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
+		UserId:  userId,
+		Message: msg,
+	})
+}
 func (e *HttpEmitter) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
 	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, types.ACTION_GET_LOGIN_INFO, nil)
 }

@@ -31,10 +31,8 @@ func (c *Composer[T]) Compose(fillers ...filter.Filter[T]) *Composer[T] {
 }
 
 func (c *Composer[T]) Handle(handler HandlerFunc[T], filters ...filter.Filter[T]) {
-	c.filters = c.combineFilters(filters)
-
 	handlerEnd := HandlerEnd[T]{
-		fillers:  c.filters,
+		fillers:  c.combineFilters(filters),
 		handlers: append(c.handlers, handler),
 	}
 	c.root.handlerEnds = append(c.root.handlerEnds, handlerEnd)
