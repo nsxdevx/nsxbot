@@ -72,5 +72,5 @@ type EventNotice struct {
 type EventRequest struct {
 }
 
-type EventMetaEvent struct {
+type EventMeta struct {
 }

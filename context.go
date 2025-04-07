@@ -11,6 +11,11 @@ import (
 
 const abortIndex int8 = math.MaxInt8 >> 1
 
+type ContextMessage = Context[types.EventMessage]
+type ContextNotice = Context[types.EventNotice]
+type ContextRequest = Context[types.EventRequest]
+type ContextMeta = Context[types.EventMeta]
+
 type Context[T any] struct {
 	context.Context
 	driver.Emitter

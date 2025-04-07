@@ -114,11 +114,11 @@ func (e *Engine) OnRequest() *EventHandler[types.EventRequest] {
 	return requestHandler
 }
 
-func (e *Engine) OnMeta() *EventHandler[types.EventMetaEvent] {
+func (e *Engine) OnMeta() *EventHandler[types.EventMeta] {
 	if v, ok := e.consumers[types.POST_TYPE_META_ENEVT]; ok {
-		return v.(*EventHandler[types.EventMetaEvent])
+		return v.(*EventHandler[types.EventMeta])
 	}
-	metaEventHandler := &EventHandler[types.EventMetaEvent]{
+	metaEventHandler := &EventHandler[types.EventMeta]{
 		emitter: e.driver,
 	}
 	e.consumers[types.POST_TYPE_META_ENEVT] = metaEventHandler
