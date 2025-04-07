@@ -82,7 +82,10 @@ func (l *HttpListener) Listen(ctx context.Context, eventChan chan<- types.Event)
 		<-ctx.Done()
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer shutdownCancel()
-		server.Shutdown(shutdownCtx)
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			l.log.Error("http server shutdown error", "err", err)
+			return 
+		}
 	}()
 	return server.ListenAndServe()
 }
@@ -122,7 +125,6 @@ func (e *HttpEmitter) Raw(ctx context.Context, action types.Action, params any) 
 		return nil, err
 	}
 	body, err := io.ReadAll(res.Body)
-	defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +149,6 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http status error code: %v", res.StatusCode)
 	}
@@ -156,7 +157,7 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 		return nil, err
 	}
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs!", action, resp.RetCode)
+		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
 	}
 	return &resp.Data, nil
 }

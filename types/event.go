@@ -56,8 +56,8 @@ type EventMessage struct {
 }
 
 var (
-	NotFound            = errors.New("not found")
-	TypeAssertionFailed = errors.New("type assertion failed")
+    ErrNotFound          = errors.New("not found")
+    ErrTypeAssertion     = errors.New("type assertion failed")
 )
 
 func (em *EventMessage) TextFirst() (*Text, error) {
@@ -86,7 +86,7 @@ func first[T any](msgType string, msg []Message) (*T, error) {
 			return &data, nil
 		}
 	}
-	return nil, NotFound
+	return nil, ErrNotFound
 }
 
 func all[T any](msgType string, msg []Message) ([]T, int) {
