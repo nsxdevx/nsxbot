@@ -24,7 +24,7 @@ type Context[T any] struct {
 	Time     int64
 	SelfID   int64
 	index    int8
-	Data     T
+	Msg      T
 	handlers HandlersChain[T]
 }
 
@@ -34,7 +34,7 @@ func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfID int64
 		Emitter:  emitter,
 		SelfID:   selfID,
 		Time:     time,
-		Data:     data,
+		Msg:      data,
 		replayer: replayer,
 		index:    -1,
 	}

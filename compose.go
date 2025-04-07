@@ -31,12 +31,11 @@ func (c *Composer[T]) Compose(fillers ...filter.Filter[T]) *Composer[T] {
 }
 
 func (c *Composer[T]) Handle(handler HandlerFunc[T], filters ...filter.Filter[T]) {
-	c.Use(handler)
 	c.filters = c.combineFilters(filters)
 
 	handlerEnd := HandlerEnd[T]{
 		fillers:  c.filters,
-		handlers: c.handlers,
+		handlers: append(c.handlers, handler),
 	}
 	c.root.handlerEnds = append(c.root.handlerEnds, handlerEnd)
 }

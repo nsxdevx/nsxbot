@@ -21,19 +21,19 @@ type EventHandler[T any] struct {
 }
 
 func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error {
-	var data T
-	if err := json.Unmarshal(event.RawData, &data); err != nil {
+	var msg T
+	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
 	}
 	event.RawData = nil
 	for _, handlerEnd := range h.handlerEnds {
 		go func() {
 			for _, filter := range handlerEnd.fillers {
-				if !filter(data) {
+				if !filter(msg) {
 					return
 				}
 			}
-			nsxctx := NewContext(ctx, h.emitter, event.SelfID, event.Time, data, event.Replyer)
+			nsxctx := NewContext(ctx, h.emitter, event.SelfID, event.Time, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()

@@ -155,5 +155,8 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return nil, err
 	}
+	if resp.Status == "failed" {
+		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs!", action, resp.RetCode)
+	}
 	return &resp.Data, nil
 }

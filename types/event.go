@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -48,15 +49,58 @@ type EventMessage struct {
 	MessageID   int32     `json:"message_id"`
 	UserID      int64     `json:"user_id"`
 	GroupID     int64     `json:"group_id"`
-	Message     []Message `json:"message"`
+	Messages    []Message `json:"message"`
 	RawMessage  string    `json:"raw_message"`
 	Font        int32     `json:"font"`
 	Sender      Sender    `json:"sender"`
 }
 
-type Message struct {
-	Type string `json:"type"`
-	Data any    `json:"data"`
+var (
+	NotFound            = errors.New("not found")
+	TypeAssertionFailed = errors.New("type assertion failed")
+)
+
+func (em *EventMessage) TextFirst() (*Text, error) {
+	return first[Text]("text", em.Messages)
+}
+
+func (em *EventMessage) Texts() ([]Text, int) {
+	return all[Text]("text", em.Messages)
+}
+
+func (em *EventMessage) Faces() ([]Face, int) {
+	return all[Face]("face", em.Messages)
+}
+
+func (em *EventMessage) FaceFirst() (*Face, error) {
+	return first[Face]("face", em.Messages)
+}
+
+func first[T any](msgType string, msg []Message) (*T, error) {
+	for _, msg := range msg {
+		if msg.Type == msgType {
+			var data T
+			if err := json.Unmarshal(msg.Data, &data); err != nil {
+				return nil, err
+			}
+			return &data, nil
+		}
+	}
+	return nil, NotFound
+}
+
+func all[T any](msgType string, msg []Message) ([]T, int) {
+	var data []T
+	for _, msg := range msg {
+		if msg.Type == msgType {
+			var d T
+			if err := json.Unmarshal(msg.Data, &data); err != nil {
+				continue
+			}
+			data = append(data, d)
+		}
+	}
+	return data, len(data)
 }
 
 type Sender struct {
