@@ -14,10 +14,14 @@ type HandlerEnd[T any] struct {
 	handlers HandlersChain[T]
 }
 
-type EventHandler[T any] struct {
+type EventHandler[T Eventer] struct {
 	emitter driver.Emitter
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
+}
+
+type Eventer interface {
+	Type() string
 }
 
 func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error {
@@ -54,7 +58,7 @@ type Engine struct {
 	driver      driver.Driver
 	task        chan types.Event
 	consumerNum int
-	consumers   map[types.PostType]Consumer
+	consumers   map[types.EventType]Consumer
 }
 
 func Default(driver driver.Driver) *Engine {
@@ -62,87 +66,52 @@ func Default(driver driver.Driver) *Engine {
 		driver:      driver,
 		task:        make(chan types.Event, 10),
 		consumerNum: 5,
-		consumers:   make(map[types.PostType]Consumer),
+		consumers:   make(map[types.EventType]Consumer, 5),
 	}
 }
 
-func NewEngine(driver driver.Driver, config Config) *Engine {
+func New(driver driver.Driver, config Config) *Engine {
 	return &Engine{
 		driver:      driver,
 		task:        make(chan types.Event, config.taskSize),
 		consumerNum: config.consumerNum,
+		consumers:   make(map[types.EventType]Consumer, config.consumerNum),
 	}
+}
+
+func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
+	eventHandler := &EventHandler[T]{
+		emitter: engine.driver,
+	}
+	eventHandler.root = eventHandler
+
+	var eventer T
+	engine.consumers[eventer.Type()] = eventHandler
+	return eventHandler
 }
 
 func (e *Engine) Emitter() driver.Emitter {
 	return e.driver
 }
 
-func (e *Engine) OnMessage() *EventHandler[types.EventMessage] {
-	if v, ok := e.consumers[types.POST_TYPE_MESSAGE]; ok {
-		return v.(*EventHandler[types.EventMessage])
-	}
-	messageHandler := &EventHandler[types.EventMessage]{
-		emitter: e.driver,
-	}
-	e.consumers[types.POST_TYPE_MESSAGE] = messageHandler
-	messageHandler.root = messageHandler
-	return messageHandler
-}
-
-func (e *Engine) OnNotice() *EventHandler[types.EventNotice] {
-	if v, ok := e.consumers[types.POST_TYPE_NOTICE]; ok {
-		return v.(*EventHandler[types.EventNotice])
-	}
-	noticeHandler := &EventHandler[types.EventNotice]{
-		emitter: e.driver,
-	}
-	e.consumers[types.POST_TYPE_NOTICE] = noticeHandler
-	noticeHandler.root = noticeHandler
-	return noticeHandler
-}
-
-func (e *Engine) OnRequest() *EventHandler[types.EventRequest] {
-	if v, ok := e.consumers[types.POST_TYPE_REQUEST]; ok {
-		return v.(*EventHandler[types.EventRequest])
-	}
-	requestHandler := &EventHandler[types.EventRequest]{
-		emitter: e.driver,
-	}
-	e.consumers[types.POST_TYPE_REQUEST] = requestHandler
-	requestHandler.root = requestHandler
-	return requestHandler
-}
-
-func (e *Engine) OnMeta() *EventHandler[types.EventMeta] {
-	if v, ok := e.consumers[types.POST_TYPE_META_ENEVT]; ok {
-		return v.(*EventHandler[types.EventMeta])
-	}
-	metaEventHandler := &EventHandler[types.EventMeta]{
-		emitter: e.driver,
-	}
-	e.consumers[types.POST_TYPE_META_ENEVT] = metaEventHandler
-	metaEventHandler.root = metaEventHandler
-	return metaEventHandler
-}
-
 func (e *Engine) Run(ctx context.Context) error {
 	for range e.consumerNum {
-		go func(ctx context.Context) {
+		go func() {
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case event := <-e.task:
-					if handler, ok := e.consumers[event.PostType]; ok {
-						ctx := context.Background()
-						if err := handler.consume(ctx, event); err != nil {
-							slog.Error("Consume error", "error", err, "post_type", event.PostType)
+					for _, Type := range event.Types {
+						if consumer, ok := e.consumers[Type]; ok {
+							if err := consumer.consume(ctx, event); err != nil {
+								slog.Error("Consume error", "error", err)
+							}
 						}
 					}
 				}
 			}
-		}(ctx)
+		}()
 	}
 	if err := e.driver.Listen(ctx, e.task); err != nil {
 		slog.Error("Listen error", "error", err)

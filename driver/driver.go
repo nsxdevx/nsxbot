@@ -18,7 +18,7 @@ type Listener interface {
 }
 
 type Emitter interface {
-	SendPrivateMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
+	SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	Raw(ctx context.Context, action types.Action, params any) ([]byte, error)
 }
@@ -38,15 +38,25 @@ type Response[T any] struct {
 func contentToEvent(content []byte) (types.Event, error) {
 	strContent := string(content)
 	postType := gjson.Get(strContent, "post_type")
+	if !postType.Exists() {
+		return types.Event{}, fmt.Errorf("invalid event, post_type: %v", postType.Exists())
+	}
+
+	Type := gjson.Get(strContent, postType.String()+"_type")
+	if !Type.Exists() {
+		return types.Event{}, fmt.Errorf("invalid event, %s_type: %v", postType.String(), Type.Exists())
+	}
+
 	time := gjson.Get(strContent, "time")
 	selfID := gjson.Get(strContent, "self_id")
-	if !postType.Exists() || !time.Exists() || !selfID.Exists() {
+	if !time.Exists() || !selfID.Exists() {
 		return types.Event{}, fmt.Errorf("invalid event, post_type: %v, time: %v, self_id: %v", postType.Exists(), time.Exists(), selfID.Exists())
 	}
+
 	return types.Event{
-		PostType: postType.String(),
-		RawData:  content,
-		SelfID:   selfID.Int(),
-		Time:     time.Int(),
+		Types:   []types.EventType{postType.String(), postType.String() + ":" + Type.String()},
+		RawData: content,
+		SelfID:  selfID.Int(),
+		Time:    time.Int(),
 	}, nil
 }

@@ -8,16 +8,34 @@ import (
 
 type Filter[T any] func(data T) bool
 
-func Group(data types.EventMessage) bool {
-	return data.MessageType == "group"
+func OnlyGroups(groups ...int64) Filter[types.EventGrMsg] {
+	return func(data types.EventGrMsg) bool {
+		return slices.Contains(groups, data.GroupId)
+	}
 }
 
-func Private(data types.EventMessage) bool {
-	return data.MessageType == "private"
+func OnlyAtUsers(userIds ...string) Filter[types.EventGrMsg] {
+	return func(data types.EventGrMsg) bool {
+		ats, n := data.Ats()
+		if n == 0 {
+			return false
+		}
+		for _, at := range ats {
+			if slices.Contains(userIds, at.QQ) {
+				return true
+			}
+		}
+		return false
+	}
 }
 
-func OnlyGroups(groups ...int64) Filter[types.EventMessage] {
-	return func(data types.EventMessage) bool {
-		return slices.Contains(groups, data.GroupID)
+func OnlyGrUsers(users ...int64) Filter[types.EventGrMsg] {
+	return func(data types.EventGrMsg) bool {
+		return slices.Contains(users, data.UserId)
+	}
+}
+func OnlyUsers(users ...int64) Filter[types.EventPvtMsg] {
+	return func(data types.EventPvtMsg) bool {
+		return slices.Contains(users, data.UserId)
 	}
 }

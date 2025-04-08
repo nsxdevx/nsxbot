@@ -8,7 +8,7 @@ type HandlersChain[T any] []HandlerFunc[T]
 
 type HandlerFunc[T any] func(ctx *Context[T])
 
-type Composer[T any] struct {
+type Composer[T Eventer] struct {
 	handlers HandlersChain[T]
 	filters  FilterChain[T]
 	root     *EventHandler[T]

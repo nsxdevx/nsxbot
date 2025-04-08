@@ -47,6 +47,10 @@ type Face struct {
 	Id string `json:"id"`
 }
 
+type At struct {
+	QQ string `json:"qq"`
+}
+
 type Image struct {
 	Name       string `json:"name"`
 	Summary    string `json:"summary"`

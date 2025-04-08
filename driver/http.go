@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/atopos31/nsxbot/types"
@@ -62,12 +63,12 @@ func (l *HttpListener) Listen(ctx context.Context, eventChan chan<- types.Event)
 			l.log.Error("invalid event", "err", err)
 			return
 		}
-		if event.PostType == types.POST_TYPE_MESSAGE {
+		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			defer cancel()
 			event.Replyer = &types.Replyer{
 				Ctx:    ctx,
 				Writer: w,
+				Cancel: cancel,
 			}
 			eventChan <- event
 			<-event.Replyer.Ctx.Done()
@@ -131,7 +132,7 @@ func (e *HttpEmitter) Raw(ctx context.Context, action types.Action, params any) 
 	return body, nil
 }
 
-func (e *HttpEmitter) SendPrivateMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *HttpEmitter) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, types.ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
