@@ -45,6 +45,16 @@ func (r *Replyer) Reply(text string) error {
 	return err
 }
 
+type EventMsg interface {
+	Type() EventType
+	TextFirst() (*Text, error)
+	Texts() ([]Text, int)
+	Faces() ([]Face, int)
+	FaceFirst() (*Face, error)
+	AtFirst() (*At, error)
+	Ats() ([]At, int)
+}
+
 type BaseMessage struct {
 	SubType    string    `json:"sub_type"`
 	MessageId  int32     `json:"message_id"`
@@ -56,7 +66,7 @@ type BaseMessage struct {
 }
 
 type EventPvtMsg struct {
-	BaseMessage
+	*BaseMessage
 }
 
 func (e EventPvtMsg) Type() EventType {
@@ -70,7 +80,7 @@ type Anonymous struct {
 }
 
 type EventGrMsg struct {
-	BaseMessage
+	*BaseMessage
 	GroupId   int64      `json:"group_id"`
 	Anonymous *Anonymous `json:"anonymous"`
 }
@@ -80,7 +90,7 @@ func (e EventGrMsg) Type() EventType {
 }
 
 type EventAllMsg struct {
-	EventGrMsg
+	*EventGrMsg
 }
 
 func (em EventAllMsg) Type() EventType {

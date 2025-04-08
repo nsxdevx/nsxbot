@@ -47,8 +47,6 @@ func main() {
 		slog.Info("Group Message", "message", text.Text)
 	})
 
-
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// Run

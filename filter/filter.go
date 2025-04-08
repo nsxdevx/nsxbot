@@ -2,6 +2,7 @@ package filter
 
 import (
 	"slices"
+	"strings"
 
 	"github.com/atopos31/nsxbot/types"
 )
@@ -34,8 +35,33 @@ func OnlyGrUsers(users ...int64) Filter[types.EventGrMsg] {
 		return slices.Contains(users, data.UserId)
 	}
 }
+
 func OnlyUsers(users ...int64) Filter[types.EventPvtMsg] {
 	return func(data types.EventPvtMsg) bool {
 		return slices.Contains(users, data.UserId)
+	}
+}
+
+func OnCommand[T types.EventMsg](prefix string, commands ...string) Filter[T] {
+	return func(msg T) bool {
+		text, err := msg.TextFirst()
+		if err != nil {
+			return false
+		}
+		trimed := strings.TrimSpace(text.Text)
+		if !strings.HasPrefix(trimed, prefix) {
+			return false
+		}
+		parts := strings.Fields(trimed)
+		if len(parts) == 0 {
+			return false
+		}
+		cmd := strings.TrimPrefix(parts[0], prefix)
+		for _, command := range commands {
+			if strings.EqualFold(cmd, command) {
+				return true
+			}
+		}
+		return false
 	}
 }
