@@ -114,8 +114,7 @@ func (e *Engine) Run(ctx context.Context) error {
 		}()
 	}
 	if err := e.driver.Listen(ctx, e.task); err != nil {
-		slog.Error("Listen error", "error", err)
-		return err
+		panic(err)
 	}
 	return nil
 }
