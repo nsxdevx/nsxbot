@@ -25,6 +25,10 @@ func (m MeaasgeChain) Text(text string) MeaasgeChain {
 	})
 }
 
+func (m MeaasgeChain) Br() MeaasgeChain {
+	return m.Text("\n")
+}
+
 func (m MeaasgeChain) Face(id string) MeaasgeChain {
 	data, err := json.Marshal(Face{
 		Id: id,
