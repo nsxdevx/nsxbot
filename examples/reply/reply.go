@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log/slog"
-	"time"
 
 	"github.com/atopos31/nsxbot"
 	"github.com/atopos31/nsxbot/driver"
@@ -14,11 +13,6 @@ func main() {
 	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
-	pvt.Use(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
-		start := time.Now()
-		ctx.Next()
-		slog.Info("Process ", "time", time.Since(start))
-	})
 
 	pvt.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
 		text, err := ctx.Msg.TextFirst()
