@@ -1,6 +1,6 @@
 # Nsxbot Onebot Framework
 
-<img align="right" style="width:250px; height:250px; border-radius:10%; " src="./docs/logo_gray.png">
+<img align="right" style="width:200px; height:200px; border-radius:10%; " src="./docs/logo_gray.png">
 
 ![Badge](https://img.shields.io/badge/OneBot-11-black)
 
