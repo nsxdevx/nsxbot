@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	emitter := driver.NewHttpEmitter("http://localhost:4000")
-	listener := driver.NewHttpListener(":8080")
-	httpdriver := driver.NewHttpDriver(listener, emitter)
-	bot := nsxbot.Default(httpdriver)
+	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
 

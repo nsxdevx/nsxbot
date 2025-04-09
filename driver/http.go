@@ -14,39 +14,39 @@ import (
 	"github.com/atopos31/nsxbot/types"
 )
 
-type HttpDriver struct {
-	*HttpEmitter
-	*HttpListener
+type DriverHttp struct {
+	*EmitterHttp
+	*ListenerHttp
 }
 
-func NewHttpDriver(listener *HttpListener, emitter *HttpEmitter) *HttpDriver {
-	return &HttpDriver{
-		HttpEmitter:  emitter,
-		HttpListener: listener,
+func NewDriverHttp(listenAddr string, emitterUrl string) *DriverHttp {
+	return &DriverHttp{
+		EmitterHttp:  NewEmitterHttp(emitterUrl),
+		ListenerHttp: NewListenerHttp(listenAddr),
 	}
 }
 
-type HttpListener struct {
+type ListenerHttp struct {
 	mux  *http.ServeMux
 	addr string
 	log  *slog.Logger
 }
 
-type HttpLIstenerOption func(*HttpListener)
+type ListenerHttpOption func(*ListenerHttp)
 
-func NewHttpListener(addr string, opts ...HttpLIstenerOption) *HttpListener {
-	httpListener := &HttpListener{
+func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
+	ListenerHttp := &ListenerHttp{
 		mux:  http.NewServeMux(),
 		addr: addr,
-		log:  slog.Default().With("HttpListener", addr),
+		log:  slog.Default().With("ListenerHttp", addr),
 	}
 	for _, opt := range opts {
-		opt(httpListener)
+		opt(ListenerHttp)
 	}
-	return httpListener
+	return ListenerHttp
 }
 
-func (l *HttpListener) Listen(ctx context.Context, eventChan chan<- types.Event) error {
+func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event) error {
 	l.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -91,27 +91,27 @@ func (l *HttpListener) Listen(ctx context.Context, eventChan chan<- types.Event)
 	return server.ListenAndServe()
 }
 
-type HttpEmitter struct {
+type EmitterHttp struct {
 	client *http.Client
 	url    string
 	log    *slog.Logger
 }
 
-type HttpEmitterOption func(*HttpEmitter)
+type EmitterHttpOption func(*EmitterHttp)
 
-func NewHttpEmitter(url string, opts ...HttpEmitterOption) *HttpEmitter {
-	httpEmitter := &HttpEmitter{
+func NewEmitterHttp(url string, opts ...EmitterHttpOption) *EmitterHttp {
+	EmitterHttp := &EmitterHttp{
 		client: http.DefaultClient,
 		url:    url,
-		log:    slog.Default().With("HttpEmitter", url),
+		log:    slog.Default().With("EmitterHttp", url),
 	}
 	for _, opt := range opts {
-		opt(httpEmitter)
+		opt(EmitterHttp)
 	}
-	return httpEmitter
+	return EmitterHttp
 }
 
-func (e *HttpEmitter) Raw(ctx context.Context, action types.Action, params any) ([]byte, error) {
+func (e *EmitterHttp) Raw(ctx context.Context, action types.Action, params any) ([]byte, error) {
 	reqbody, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
@@ -132,13 +132,13 @@ func (e *HttpEmitter) Raw(ctx context.Context, action types.Action, params any) 
 	return body, nil
 }
 
-func (e *HttpEmitter) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, types.ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
 	})
 }
-func (e *HttpEmitter) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
+func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
 	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, types.ACTION_GET_LOGIN_INFO, nil)
 }
 

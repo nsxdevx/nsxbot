@@ -4,10 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"runtime"
 
 	"github.com/atopos31/nsxbot/driver"
 	"github.com/atopos31/nsxbot/types"
 )
+
+type Eventer interface {
+	Type() string
+}
 
 type HandlerEnd[T any] struct {
 	fillers  FilterChain[T]
@@ -20,16 +25,11 @@ type EventHandler[T Eventer] struct {
 	handlerEnds []HandlerEnd[T]
 }
 
-type Eventer interface {
-	Type() string
-}
-
 func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error {
 	var msg T
 	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
 	}
-	event.RawData = nil
 	for _, handlerEnd := range h.handlerEnds {
 		go func() {
 			for _, filter := range handlerEnd.fillers {
@@ -45,43 +45,13 @@ func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error 
 	return nil
 }
 
-type Consumer interface {
+type consumer interface {
 	consume(ctx context.Context, event types.Event) error
-}
-
-type Config struct {
-	taskSize    int
-	consumerNum int
-}
-
-type Engine struct {
-	driver      driver.Driver
-	task        chan types.Event
-	consumerNum int
-	consumers   map[types.EventType]Consumer
-}
-
-func Default(driver driver.Driver) *Engine {
-	return &Engine{
-		driver:      driver,
-		task:        make(chan types.Event, 10),
-		consumerNum: 5,
-		consumers:   make(map[types.EventType]Consumer, 5),
-	}
-}
-
-func New(driver driver.Driver, config Config) *Engine {
-	return &Engine{
-		driver:      driver,
-		task:        make(chan types.Event, config.taskSize),
-		consumerNum: config.consumerNum,
-		consumers:   make(map[types.EventType]Consumer, config.consumerNum),
-	}
 }
 
 func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler := &EventHandler[T]{
-		emitter: engine.driver,
+		emitter: engine.emitter,
 	}
 	eventHandler.root = eventHandler
 
@@ -90,18 +60,43 @@ func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
 	return eventHandler
 }
 
-func (e *Engine) Emitter() driver.Emitter {
-	return e.driver
+type Engine struct {
+	listener    driver.Listener
+	emitter     driver.Emitter
+	taskLen     int
+	consumerNum int
+	consumers   map[types.EventType]consumer
 }
 
-func (e *Engine) Run(ctx context.Context) error {
+func Default(driver driver.Driver) *Engine {
+	return &Engine{
+		listener:    driver,
+		emitter:     driver,
+		taskLen:     10,
+		consumerNum: runtime.NumCPU(),
+		consumers:   make(map[types.EventType]consumer),
+	}
+}
+
+func New(listener driver.Listener, emitter driver.Emitter) *Engine {
+	return &Engine{
+		listener:    listener,
+		emitter:     emitter,
+		taskLen:     10,
+		consumerNum: runtime.NumCPU(),
+		consumers:   make(map[types.EventType]consumer),
+	}
+}
+
+func (e *Engine) Run(ctx context.Context) {
+	task := make(chan types.Event, e.taskLen)
 	for range e.consumerNum {
 		go func() {
 			for {
 				select {
 				case <-ctx.Done():
 					return
-				case event := <-e.task:
+				case event := <-task:
 					for _, Type := range event.Types {
 						if consumer, ok := e.consumers[Type]; ok {
 							if err := consumer.consume(ctx, event); err != nil {
@@ -113,8 +108,7 @@ func (e *Engine) Run(ctx context.Context) error {
 			}
 		}()
 	}
-	if err := e.driver.Listen(ctx, e.task); err != nil {
+	if err := e.listener.Listen(ctx, task); err != nil {
 		panic(err)
 	}
-	return nil
 }

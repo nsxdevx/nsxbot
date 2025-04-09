@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	emitter := driver.NewHttpEmitter("http://localhost:4000")
-	listener := driver.NewHttpListener(":8080")
-	httpdriver := driver.NewHttpDriver(listener, emitter)
-	bot := nsxbot.Default(httpdriver)
+	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 	pvt.Use(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
@@ -31,6 +28,8 @@ func main() {
 		}
 		slog.Info("Private Message", "message", text.Text)
 		ctx.Reply(text.Text)
+		var msg types.MeaasgeChain
+		ctx.SendPvtMsg(ctx, 2945294768, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

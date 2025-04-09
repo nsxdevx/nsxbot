@@ -44,11 +44,11 @@ import (
 )
 
 func main() {
-	emitter := driver.NewHttpEmitter("http://localhost:4000")
-	listener := driver.NewHttpListener(":8080")
-	httpdriver := driver.NewHttpDriver(listener, emitter)
+	emitter := driver.NewEmitterHttp("http://localhost:4000")
+	listener := driver.NewListenerHttp(":8080")
+	DriverHttp := driver.NewDriverHttp(listener, emitter)
     
-	bot := nsxbot.Default(httpdriver)
+	bot := nsxbot.Default(DriverHttp)
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
