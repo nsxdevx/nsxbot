@@ -38,7 +38,7 @@ func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 	ListenerHttp := &ListenerHttp{
 		mux:  http.NewServeMux(),
 		addr: addr,
-		log:  slog.Default().With("ListenerHttp", addr),
+		log:  slog.Default().WithGroup("[NSXBOT]"),
 	}
 	for _, opt := range opts {
 		opt(ListenerHttp)

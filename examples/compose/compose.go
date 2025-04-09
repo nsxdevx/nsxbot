@@ -15,7 +15,7 @@ func main() {
 
 	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
 
-	gr1 := gr.Compose(filter.OnlyGroups(819085771))
+	gr1 := gr.Compose(filter.OnlyGroups(819085771), filter.OnlyAtUsers("123456789"))
 	gr1.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
@@ -35,17 +35,19 @@ func main() {
 	})
 
 	ge2 := gr.Compose(filter.OnlyGroups(517170497))
-	ge2.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
-		text, err := ctx.Msg.TextFirst()
-		if err != nil {
-			slog.Error("Error parsing text message", "error", err)
-			return
-		}
-		slog.Info("Group Message", "message", text.Text)
-	})
+	ge2.Handle(ontext)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// Run
 	bot.Run(ctx)
+}
+
+func ontext(ctx *nsxbot.Context[types.EventGrMsg]) {
+	text, err := ctx.Msg.TextFirst()
+	if err != nil {
+		slog.Error("Error parsing text message", "error", err)
+		return
+	}
+	slog.Info("Group Message", "message", text.Text)
 }
