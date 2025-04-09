@@ -4,7 +4,7 @@
 
 ![Badge](https://img.shields.io/badge/OneBot-11-black)
 
-Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 OneBot 11 协议的聊天机器人框架。
+Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](https://github.com/botuniverse/onebot-11) 协议的聊天机器人框架。
 
 提供类似Web框架风格的API，如果你是一个Go Web开发者，那么你可以非常方便的使用Nsxbot。
 
