@@ -88,6 +88,14 @@ func New(listener driver.Listener, emitter driver.Emitter) *Engine {
 	}
 }
 
+func (e *Engine) SetTaskLen(taskLen int) {
+	e.taskLen = taskLen
+}
+
+func (e *Engine) SetConsumerNum(consumerNum int) {
+	e.consumerNum = consumerNum
+}
+
 func (e *Engine) Run(ctx context.Context) {
 	task := make(chan types.Event, e.taskLen)
 	for range e.consumerNum {
