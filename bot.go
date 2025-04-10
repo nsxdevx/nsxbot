@@ -22,7 +22,6 @@ type HandlerEnd[T any] struct {
 }
 
 type EventHandler[T Eventer] struct {
-	emitter driver.Emitter
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
 }
@@ -42,7 +41,7 @@ func (h *EventHandler[T]) infos() []string {
 	return infos
 }
 
-func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error {
+func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, event types.Event) error {
 	var msg T
 	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
@@ -54,7 +53,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error 
 					return
 				}
 			}
-			nsxctx := NewContext(ctx, h.emitter, event.SelfID, event.Time, msg, event.Replyer)
+			nsxctx := NewContext(ctx, emitter, event.SelfID, event.Time, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()
@@ -64,13 +63,11 @@ func (h *EventHandler[T]) consume(ctx context.Context, event types.Event) error 
 
 type consumer interface {
 	infos() []string
-	consume(ctx context.Context, event types.Event) error
+	consume(ctx context.Context, emitter driver.Emitter, event types.Event) error
 }
 
 func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
-	eventHandler := &EventHandler[T]{
-		emitter: engine.emitter,
-	}
+	eventHandler := new(EventHandler[T])
 	eventHandler.root = eventHandler
 
 	var eventer T
@@ -135,7 +132,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 			e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
-					if err := consumer.consume(ctx, event); err != nil {
+					if err := consumer.consume(ctx, e.emitter, event); err != nil {
 						e.logger.Error("Consume error", "error", err)
 						continue
 					}
