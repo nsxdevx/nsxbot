@@ -84,7 +84,7 @@ type Engine struct {
 	taskLen     int
 	consumerNum int
 	consumers   map[types.EventType]consumer
-	loger       *slog.Logger
+	logger      *slog.Logger
 }
 
 func Default(driver driver.Driver) *Engine {
@@ -94,7 +94,7 @@ func Default(driver driver.Driver) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		loger:       slog.Default().WithGroup("[NSXBOT]"),
+		logger:      slog.Default().WithGroup("[NSXBOT]"),
 	}
 }
 
@@ -105,7 +105,7 @@ func New(listener driver.Listener, emitter driver.Emitter) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		loger:       slog.Default().WithGroup("[NSXBOT]"),
+		logger:      slog.Default().WithGroup("[NSXBOT]"),
 	}
 }
 
@@ -121,7 +121,7 @@ func (e *Engine) debug() {
 	for t, consumer := range e.consumers {
 		for _, info := range consumer.infos() {
 			chain := "onebot->" + t + "->" + info
-			e.loger.Info("Consumer", "chain", chain)
+			e.logger.Info("Consumer", "chain", chain)
 		}
 	}
 }
@@ -135,14 +135,14 @@ func (e *Engine) Run(ctx context.Context) {
 				case <-ctx.Done():
 					return
 				case event := <-task:
-					e.loger.Info("Received", "event", event.Types,"time", event.Time, "selfID", event.SelfID)
+					e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 					for _, Type := range event.Types {
 						if consumer, ok := e.consumers[Type]; ok {
 							if err := consumer.consume(ctx, event); err != nil {
-								e.loger.Error("Consume error", "error", err)
+								e.logger.Error("Consume error", "error", err)
 								continue
 							}
-							e.loger.Info("Consumed", "event", event.Types,"time", event.Time, "selfID", event.SelfID)
+							e.logger.Info("Consumed", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 						}
 					}
 				}
