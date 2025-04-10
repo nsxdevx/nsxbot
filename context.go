@@ -2,7 +2,7 @@ package nsxbot
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"math"
 
 	"github.com/atopos31/nsxbot/driver"
@@ -35,11 +35,15 @@ func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfID int64
 	}
 }
 
+var (
+	NO_REPLAYER = errors.New("No replayer available")
+)
+
 func (c *Context[T]) Reply(text string) error {
 	if c.replayer != nil {
 		return c.replayer.Reply(text)
 	}
-	return fmt.Errorf("no replayer available")
+	return NO_REPLAYER
 }
 
 func (c *Context[T]) Next() {

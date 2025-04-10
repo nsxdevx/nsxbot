@@ -55,12 +55,13 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		content, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			l.log.Error("Read body error", "err", err)
 			return
 		}
 		event, err := contentToEvent(content)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			l.log.Error("invalid event", "err", err)
+			l.log.Error("Invalid event", "err", err)
 			return
 		}
 		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) {
@@ -77,14 +78,14 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		}
 
 	})
-	l.log.Info("Http listener start...", "addr", l.addr)
+	l.log.Info("Http listener start... ", "addr", l.addr)
 	server := &http.Server{Addr: l.addr, Handler: l.mux}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer shutdownCancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			l.log.Error("http server shutdown error", "err", err)
+			l.log.Error("Http server shutdown error", "err", err)
 			return
 		}
 	}()
@@ -157,14 +158,14 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http status error code: %v", res.StatusCode)
+		return nil, fmt.Errorf("Http status error code: %v", res.StatusCode)
 	}
 	var resp Response[R]
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return nil, err
 	}
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
+		return nil, fmt.Errorf("Action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
 	}
 	return &resp.Data, nil
 }
