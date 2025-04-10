@@ -126,30 +126,32 @@ func (e *Engine) debug() {
 	}
 }
 
-func (e *Engine) Run(ctx context.Context) {
-	task := make(chan types.Event, e.taskLen)
-	for range e.consumerNum {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case event := <-task:
-					e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
-					for _, Type := range event.Types {
-						if consumer, ok := e.consumers[Type]; ok {
-							if err := consumer.consume(ctx, event); err != nil {
-								e.logger.Error("Consume error", "error", err)
-								continue
-							}
-							e.logger.Info("Consumed", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
-						}
+func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case event := <-task:
+			e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
+			for _, Type := range event.Types {
+				if consumer, ok := e.consumers[Type]; ok {
+					if err := consumer.consume(ctx, event); err != nil {
+						e.logger.Error("Consume error", "error", err)
+						continue
 					}
+					e.logger.Info("Consumed", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 				}
 			}
-		}()
+		}
 	}
+}
+
+func (e *Engine) Run(ctx context.Context) {
 	e.debug()
+	task := make(chan types.Event, e.taskLen)
+	for range e.consumerNum {
+		go e.consumerStart(ctx, task)
+	}
 	if err := e.listener.Listen(ctx, task); err != nil {
 		panic(err)
 	}
