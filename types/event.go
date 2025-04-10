@@ -49,8 +49,8 @@ type EventMsg interface {
 	Type() EventType
 	TextFirst() (*Text, error)
 	Texts() ([]Text, int)
-	Faces() ([]Face, int)
 	FaceFirst() (*Face, error)
+	Faces() ([]Face, int)
 	AtFirst() (*At, error)
 	Ats() ([]At, int)
 }
