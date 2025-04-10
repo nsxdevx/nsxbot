@@ -39,18 +39,18 @@ func contentToEvent(content []byte) (types.Event, error) {
 	strContent := string(content)
 	postType := gjson.Get(strContent, "post_type")
 	if !postType.Exists() {
-		return types.Event{}, fmt.Errorf("Invalid event, post_type: %v", postType.Exists())
+		return types.Event{}, fmt.Errorf("invalid event, post_type: %v", postType.Exists())
 	}
 
 	Type := gjson.Get(strContent, postType.String()+"_type")
 	if !Type.Exists() {
-		return types.Event{}, fmt.Errorf("Invalid event, %s_type: %v", postType.String(), Type.Exists())
+		return types.Event{}, fmt.Errorf("invalid event, %s_type: %v", postType.String(), Type.Exists())
 	}
 
 	time := gjson.Get(strContent, "time")
 	selfID := gjson.Get(strContent, "self_id")
 	if !time.Exists() || !selfID.Exists() {
-		return types.Event{}, fmt.Errorf("Invalid event, post_type: %v, time: %v, self_id: %v", postType.Exists(), time.Exists(), selfID.Exists())
+		return types.Event{}, fmt.Errorf("invalid event, post_type: %v, time: %v, self_id: %v", postType.Exists(), time.Exists(), selfID.Exists())
 	}
 
 	return types.Event{

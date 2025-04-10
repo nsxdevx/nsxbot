@@ -36,14 +36,14 @@ func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfID int64
 }
 
 var (
-	NO_REPLAYER = errors.New("No replayer available")
+	ErrNoAvailable = errors.New("no replayer available")
 )
 
 func (c *Context[T]) Reply(text string) error {
 	if c.replayer != nil {
 		return c.replayer.Reply(text)
 	}
-	return NO_REPLAYER
+	return ErrNoAvailable
 }
 
 func (c *Context[T]) Next() {

@@ -158,14 +158,14 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Http status error code: %v", res.StatusCode)
+		return nil, fmt.Errorf("http status error code: %v", res.StatusCode)
 	}
 	var resp Response[R]
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
 		return nil, err
 	}
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("Action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
+		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
 	}
 	return &resp.Data, nil
 }
