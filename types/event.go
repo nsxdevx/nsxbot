@@ -45,8 +45,12 @@ func (r *Replyer) Reply(text string) error {
 	return err
 }
 
-type EventMsg interface {
+type Eventer interface {
 	Type() EventType
+}
+
+type EventMsg interface {
+	Eventer
 	TextFirst() (*Text, error)
 	Texts() ([]Text, int)
 	FaceFirst() (*Face, error)

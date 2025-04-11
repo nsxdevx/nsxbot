@@ -1,6 +1,9 @@
 package nsxbot
 
-import "github.com/atopos31/nsxbot/filter"
+import (
+	"github.com/atopos31/nsxbot/filter"
+	"github.com/atopos31/nsxbot/types"
+)
 
 type FilterChain[T any] []filter.Filter[T]
 
@@ -8,7 +11,7 @@ type HandlersChain[T any] []HandlerFunc[T]
 
 type HandlerFunc[T any] func(ctx *Context[T])
 
-type Composer[T Eventer] struct {
+type Composer[T types.Eventer] struct {
 	handlers HandlersChain[T]
 	filters  FilterChain[T]
 	root     *EventHandler[T]

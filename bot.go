@@ -3,27 +3,30 @@ package nsxbot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/atopos31/nsxbot/driver"
 	"github.com/atopos31/nsxbot/types"
 )
 
-type Eventer interface {
-	Type() string
-}
-
 type HandlerEnd[T any] struct {
 	fillers  FilterChain[T]
 	handlers HandlersChain[T]
 }
 
-type EventHandler[T Eventer] struct {
+type EventHandler[T types.Eventer] struct {
+	selfIds []int64
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
+}
+
+func (h *EventHandler[T]) selfs() ([]int64, bool) {
+	return h.selfIds, len(h.selfIds) != 0
 }
 
 func (h *EventHandler[T]) infos() []string {
@@ -53,7 +56,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
-			nsxctx := NewContext(ctx, emitter, event.SelfID, event.Time, msg, event.Replyer)
+			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfID, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()
@@ -62,11 +65,13 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 }
 
 type consumer interface {
+	selfs() ([]int64, bool)
 	infos() []string
 	consume(ctx context.Context, emitter driver.Emitter, event types.Event) error
 }
 
-func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
+// start handler all self event
+func OnEvent[T types.Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler := new(EventHandler[T])
 	eventHandler.root = eventHandler
 
@@ -75,19 +80,32 @@ func OnEvent[T Eventer](engine *Engine) *EventHandler[T] {
 	return eventHandler
 }
 
+// start handler evnet by selfIds
+func OnSelfsEvent[T types.Eventer](engine *Engine, selfIds ...int64) *EventHandler[T] {
+	eventHandler := OnEvent[T](engine)
+	eventHandler.selfIds = selfIds
+	return eventHandler
+}
+
 type Engine struct {
 	listener    driver.Listener
-	emitter     driver.Emitter
+	emitters    map[int64]driver.Emitter
 	taskLen     int
 	consumerNum int
 	consumers   map[types.EventType]consumer
 	logger      *slog.Logger
 }
 
-func Default(driver driver.Driver) *Engine {
+func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
+	info, err := oneDriver.GetLoginInfo(ctx)
+	if err != nil {
+		panic(err)
+	}
+	emitters := make(map[int64]driver.Emitter, 1)
+	emitters[info.UserID] = oneDriver
 	return &Engine{
-		listener:    driver,
-		emitter:     driver,
+		listener:    oneDriver,
+		emitters:    emitters,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
@@ -95,10 +113,20 @@ func Default(driver driver.Driver) *Engine {
 	}
 }
 
-func New(listener driver.Listener, emitter driver.Emitter) *Engine {
+func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitter) *Engine {
+	emitters := make(map[int64]driver.Emitter, len(emitter))
+	for _, e := range emitter {
+		info, err := e.GetLoginInfo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		if _, ok := emitters[info.UserID]; !ok {
+			emitters[info.UserID] = e
+		}
+	}
 	return &Engine{
 		listener:    listener,
-		emitter:     emitter,
+		emitters:    emitters,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
@@ -115,11 +143,23 @@ func (e *Engine) SetConsumerNum(consumerNum int) {
 }
 
 func (e *Engine) debug() {
+	e.logger.Info("Engine", "taskLen", e.taskLen, "consumerNum", e.consumerNum)
+	e.logger.Info("Consumers", "num", len(e.consumers))
 	for t, consumer := range e.consumers {
 		for _, info := range consumer.infos() {
-			chain := "onebot->" + t + "->" + info
+			chain := "onebot->"
+			if selfIds, ok := consumer.selfs(); ok {
+				chain += fmt.Sprintf("selfId:%v->", selfIds)
+			} else {
+				chain += "all->"
+			}
+			chain += t + "->" + info
 			e.logger.Info("Consumer", "chain", chain)
 		}
+	}
+	e.logger.Info("Emitters", "num", len(e.emitters))
+	for id, emitter := range e.emitters {
+		e.logger.Info("Emitter", "id", id, "type", reflect.TypeOf(emitter))
 	}
 }
 
@@ -132,7 +172,10 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 			e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
-					if err := consumer.consume(ctx, e.emitter, event); err != nil {
+					if selfId, ok := consumer.selfs(); ok && !slices.Contains(selfId, event.SelfID) {
+						continue
+					}
+					if err := consumer.consume(ctx, e.emitters[event.SelfID], event); err != nil {
 						e.logger.Error("Consume error", "error", err)
 						continue
 					}

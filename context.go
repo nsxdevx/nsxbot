@@ -17,17 +17,17 @@ type Context[T any] struct {
 
 	replayer *types.Replyer
 	Time     int64
-	SelfID   int64
+	SelfId   int64
 	index    int8
 	Msg      T
 	handlers HandlersChain[T]
 }
 
-func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfID int64, time int64, data T, replayer *types.Replyer) Context[T] {
+func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfId int64, time int64, data T, replayer *types.Replyer) Context[T] {
 	return Context[T]{
 		Context:  ctx,
 		Emitter:  emitter,
-		SelfID:   selfID,
+		SelfId:   selfId,
 		Time:     time,
 		Msg:      data,
 		replayer: replayer,

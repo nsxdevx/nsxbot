@@ -11,7 +11,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
 
@@ -37,8 +39,6 @@ func main() {
 	ge2 := gr.Compose(filter.OnlyGroups(517170497))
 	ge2.Handle(ontext)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }

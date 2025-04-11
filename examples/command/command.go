@@ -11,7 +11,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	gr := nsxbot.OnEvent[types.EventPvtMsg](bot)
 	gr.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
@@ -42,8 +44,6 @@ func main() {
 
 	}, filter.OnCommand[types.EventPvtMsg]("/", "echo"))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }

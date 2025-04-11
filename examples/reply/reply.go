@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
@@ -26,8 +28,6 @@ func main() {
 		ctx.SendPvtMsg(ctx, 2945294768, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }

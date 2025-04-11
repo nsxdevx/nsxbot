@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	all := nsxbot.OnEvent[types.EventAllMsg](bot)
 	all.Handle(func(ctx *nsxbot.Context[types.EventAllMsg]) {
@@ -32,8 +34,6 @@ func main() {
 		slog.Info("Private Message", "message", text.Text)
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }

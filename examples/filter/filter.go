@@ -11,7 +11,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
 	gr.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
@@ -23,8 +25,6 @@ func main() {
 		slog.Info("Group Message", "message", text.Text)
 	}, filter.OnlyGroups(819085771))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }
