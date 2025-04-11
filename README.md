@@ -10,6 +10,7 @@ Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](h
 
 ## 特性
 - http，websocket 协议支持
+- 支持多客户端统一处理
 - 泛型支持，远离any
 - 中间件支持
 - 过滤器支持
@@ -42,7 +43,9 @@ import (
 )
 
 func main() {
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
@@ -58,8 +61,6 @@ func main() {
 		ctx.SendPvtMsg(ctx, 2945294768, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	// Run
 	bot.Run(ctx)
 }
