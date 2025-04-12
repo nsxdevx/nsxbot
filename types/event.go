@@ -129,6 +129,14 @@ func (em *BaseMessage) Ats() ([]At, int) {
 	return all[At]("at", em.Messages)
 }
 
+func (em *BaseMessage) ImageFirst() (*Image, error) {
+	return first[Image]("image", em.Messages)
+}
+
+func (em *BaseMessage) Images() ([]Image, int) {
+	return all[Image]("image", em.Messages)
+}
+
 func first[T any](msgType string, msg []Message) (*T, error) {
 	for _, msg := range msg {
 		if msg.Type == msgType {

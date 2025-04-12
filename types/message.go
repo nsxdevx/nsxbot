@@ -42,6 +42,23 @@ func (m MeaasgeChain) Face(id string) MeaasgeChain {
 	})
 }
 
+// such as:
+// network URL: https://www.example.com/image.png
+// local file:///C:\\Users\Richard\Pictures\1.png see rfc 8089
+// base64: base64://9j/4AAQSkZJRgABAQEAAAAAAAD/...
+func (m MeaasgeChain) Image(file string) MeaasgeChain {
+	data, err := json.Marshal(Image{
+		File: file,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "image",
+		Data: data,
+	})
+}
+
 type Message struct {
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`
@@ -105,6 +122,6 @@ type Image struct {
 	FileID     string `json:"file_id"`
 	Url        string `json:"url"`
 	Path       string `json:"path"`
-	FileSize   int64  `json:"file_size"`
+	FileSize   string  `json:"file_size"`
 	FileUnique string `json:"file_unique"`
 }
