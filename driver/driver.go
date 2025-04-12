@@ -19,14 +19,15 @@ type Listener interface {
 
 type Emitter interface {
 	SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
+	SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
-	Raw(ctx context.Context, action types.Action, params any) ([]byte, error)
+	Raw(ctx context.Context, action Action, params any) ([]byte, error)
 }
 
 type Request[T any] struct {
-	Echo   int64        `json:"echo"`
-	Action types.Action `json:"action"`
-	Params T            `json:"params,omitempty"`
+	Echo   int64  `json:"echo"`
+	Action Action `json:"action"`
+	Params T      `json:"params,omitempty"`
 }
 
 type Response[T any] struct {

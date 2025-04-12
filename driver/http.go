@@ -112,7 +112,7 @@ func NewEmitterHttp(url string, opts ...EmitterHttpOption) *EmitterHttp {
 	return EmitterHttp
 }
 
-func (e *EmitterHttp) Raw(ctx context.Context, action types.Action, params any) ([]byte, error) {
+func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byte, error) {
 	reqbody, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
@@ -134,13 +134,21 @@ func (e *EmitterHttp) Raw(ctx context.Context, action types.Action, params any) 
 }
 
 func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
-	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, types.ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
+	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
 	})
 }
+
+func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+	return httpAction[types.SendGrMsgReq, types.SendMsgRes](ctx, e.client, e.url, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
+		GroupId: groupId,
+		Message: msg,
+	})
+}
+
 func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
-	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, types.ACTION_GET_LOGIN_INFO, nil)
+	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, ACTION_GET_LOGIN_INFO, nil)
 }
 
 func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl string, action string, params P) (*R, error) {
@@ -160,12 +168,16 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http status error code: %v", res.StatusCode)
 	}
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 	var resp Response[R]
-	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
 	if resp.Status == "failed" {
-		return nil, fmt.Errorf("action %s failed, retcode: %d, plase see onebot logs", action, resp.RetCode)
+		return nil, fmt.Errorf("action %s failed, rawdata: %s, plase see onebot logs", action, string(body))
 	}
 	return &resp.Data, nil
 }
