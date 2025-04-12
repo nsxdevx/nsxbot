@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"reflect"
 	"runtime"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/atopos31/nsxbot/driver"
 	"github.com/atopos31/nsxbot/types"
+	"github.com/lmittmann/tint"
 )
 
 type HandlerEnd[T any] struct {
@@ -109,7 +112,10 @@ func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger:      slog.Default().WithGroup("[NSXBOT]"),
+		logger: slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		})),
 	}
 }
 
@@ -130,7 +136,7 @@ func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitte
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger:      slog.Default().WithGroup("[NSXBOT]"),
+		logger:      slog.New(tint.NewHandler(os.Stderr, nil)),
 	}
 }
 
@@ -169,7 +175,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 		case <-ctx.Done():
 			return
 		case event := <-task:
-			e.logger.Info("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
+			e.logger.Debug("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
 					if selfId, ok := consumer.selfs(); ok && !slices.Contains(selfId, event.SelfID) {
@@ -179,7 +185,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 						e.logger.Error("Consume error", "error", err)
 						continue
 					}
-					e.logger.Info("Consumed", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
+					e.logger.Info("Consumed", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
 				}
 			}
 		}
