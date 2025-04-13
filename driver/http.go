@@ -151,6 +151,10 @@ func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error
 	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, ACTION_GET_LOGIN_INFO, nil)
 }
 
+func (e *EmitterHttp) GetStatus(ctx context.Context) (*types.Status, error) {
+	return httpAction[any, types.Status](ctx, e.client, e.url, Action_GET_STATUS, nil)
+}
+
 func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl string, action string, params P) (*R, error) {
 	reqbody, err := json.Marshal(params)
 	if err != nil {
