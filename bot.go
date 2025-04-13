@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 	"reflect"
 	"runtime"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/atopos31/nsxbot/driver"
+	"github.com/atopos31/nsxbot/nlog"
 	"github.com/atopos31/nsxbot/types"
-	"github.com/lmittmann/tint"
 )
 
 type HandlerEnd[T any] struct {
@@ -112,10 +110,7 @@ func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger: slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-			Level:      slog.LevelDebug,
-			TimeFormat: time.Kitchen,
-		})),
+		logger:      nlog.Logger(),
 	}
 }
 
@@ -136,10 +131,7 @@ func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitte
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger: slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-			Level:      slog.LevelDebug,
-			TimeFormat: time.Kitchen,
-		})),
+		logger:      nlog.Logger(),
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/atopos31/nsxbot/nlog"
 	"github.com/atopos31/nsxbot/types"
 )
 
@@ -38,7 +39,7 @@ func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 	ListenerHttp := &ListenerHttp{
 		mux:  http.NewServeMux(),
 		addr: addr,
-		log:  slog.Default(),
+		log:  nlog.Logger(),
 	}
 	for _, opt := range opts {
 		opt(ListenerHttp)
@@ -105,7 +106,7 @@ func NewEmitterHttp(url string, opts ...EmitterHttpOption) *EmitterHttp {
 	EmitterHttp := &EmitterHttp{
 		client: http.DefaultClient,
 		url:    url,
-		log:    slog.Default().With("EmitterHttp", url),
+		log:    nlog.Logger(),
 	}
 	for _, opt := range opts {
 		opt(EmitterHttp)
@@ -180,7 +181,7 @@ func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
 	if e.selfId != nil {
 		return *e.selfId, nil
 	}
-	e.log.Warn("selfId is nil, try get from GetLoginInfo")
+	e.log.Warn("selfId is nil, try get from GetLoginInfo", "url", e.url)
 	info, err := e.GetLoginInfo(ctx)
 	if err != nil {
 		return 0, err
