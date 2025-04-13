@@ -20,6 +20,7 @@ type Listener interface {
 type Emitter interface {
 	SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
+	GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error)
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	GetStatus(ctx context.Context) (*types.Status, error)
 	Raw(ctx context.Context, action Action, params any) ([]byte, error)

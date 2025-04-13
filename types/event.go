@@ -105,6 +105,10 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+func (em *BaseMessage) Id() int32 {
+	return em.MessageId
+}
+
 func (em *BaseMessage) TextFirst() (*Text, error) {
 	return first[Text]("text", em.Messages)
 }

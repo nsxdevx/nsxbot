@@ -9,3 +9,7 @@ type SendGrMsgReq struct {
 	GroupId int64     `json:"group_id"`
 	Message []Message `json:"message"`
 }
+
+type GetMsgReq struct {
+	MessageId int32 `json:"message_id"`
+}

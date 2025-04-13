@@ -147,6 +147,12 @@ func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg types.Me
 	})
 }
 
+func (e *EmitterHttp) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error) {
+	return httpAction[types.GetMsgReq, types.GetMsgRes](ctx, e.client, e.url, ACTION_GET_MSG, types.GetMsgReq{
+		MessageId: msgId,
+	})
+}
+
 func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
 	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, ACTION_GET_LOGIN_INFO, nil)
 }
