@@ -19,9 +19,6 @@ Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](h
 - 事件分组监听
 - 自由组合与可扩展性
 
-> [!IMPORTANT]  
-> 现在还无法使用，框架正在开发中......
-
 ## 快速开始
 
 ### 获取
@@ -29,7 +26,8 @@ Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](h
 ```sh
 go get -u github.com/atopos31/nsxbot
 ```
-
+> [!IMPORTANT] 
+> 未发布第一版测试，你会拉取到仓库的最新提交，不保证可靠，框架正在开发中......
 ### 运行
 回复示例：
 ```go
