@@ -24,6 +24,7 @@ type Emitter interface {
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error)
 	GetStatus(ctx context.Context) (*types.Status, error)
+	GetSelfId(ctx context.Context) (int64, error)
 	Raw(ctx context.Context, action Action, params any) ([]byte, error)
 }
 

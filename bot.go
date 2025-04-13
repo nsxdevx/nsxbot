@@ -100,12 +100,12 @@ type Engine struct {
 }
 
 func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
-	info, err := oneDriver.GetLoginInfo(ctx)
+	selfId, err := oneDriver.GetSelfId(ctx)
 	if err != nil {
-		panic(err)
+		panic("Get selfId error: " + err.Error())
 	}
 	emitters := make(map[int64]driver.Emitter, 1)
-	emitters[info.UserId] = oneDriver
+	emitters[selfId] = oneDriver
 	return &Engine{
 		listener:    oneDriver,
 		emitters:    emitters,
@@ -122,12 +122,12 @@ func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
 func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitter) *Engine {
 	emitters := make(map[int64]driver.Emitter, len(emitter))
 	for _, e := range emitter {
-		info, err := e.GetLoginInfo(ctx)
+		selfId, err := e.GetSelfId(ctx)
 		if err != nil {
-			panic(err)
+			panic("Get selfId error: " + err.Error())
 		}
-		if _, ok := emitters[info.UserId]; !ok {
-			emitters[info.UserId] = e
+		if _, ok := emitters[selfId]; !ok {
+			emitters[selfId] = e
 		}
 	}
 	return &Engine{
@@ -136,7 +136,10 @@ func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitte
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger:      slog.New(tint.NewHandler(os.Stderr, nil)),
+		logger: slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		})),
 	}
 }
 

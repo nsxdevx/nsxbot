@@ -95,6 +95,7 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 type EmitterHttp struct {
 	client *http.Client
 	url    string
+	selfId *int64
 	log    *slog.Logger
 }
 
@@ -110,6 +111,13 @@ func NewEmitterHttp(url string, opts ...EmitterHttpOption) *EmitterHttp {
 		opt(EmitterHttp)
 	}
 	return EmitterHttp
+}
+
+// Set selfId to EmitterHttp, instand of get from GetLoginInfo
+func WithEmitterHttpSelfId(selfId int64) EmitterHttpOption {
+	return func(e *EmitterHttp) {
+		e.selfId = &selfId
+	}
 }
 
 func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byte, error) {
@@ -166,6 +174,19 @@ func (e *EmitterHttp) GetStrangerInfo(ctx context.Context, userId int64, noCache
 
 func (e *EmitterHttp) GetStatus(ctx context.Context) (*types.Status, error) {
 	return httpAction[any, types.Status](ctx, e.client, e.url, Action_GET_STATUS, nil)
+}
+
+func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
+	if e.selfId != nil {
+		return *e.selfId, nil
+	}
+	e.log.Warn("selfId is nil, try get from GetLoginInfo")
+	info, err := e.GetLoginInfo(ctx)
+	if err != nil {
+		return 0, err
+	}
+	e.selfId = &info.UserId
+	return *e.selfId, nil
 }
 
 func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl string, action string, params P) (*R, error) {
