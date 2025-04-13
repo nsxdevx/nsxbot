@@ -22,6 +22,7 @@ type Emitter interface {
 	SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error)
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
+	GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error)
 	GetStatus(ctx context.Context) (*types.Status, error)
 	Raw(ctx context.Context, action Action, params any) ([]byte, error)
 }

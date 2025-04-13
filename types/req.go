@@ -10,6 +10,11 @@ type SendGrMsgReq struct {
 	Message []Message `json:"message"`
 }
 
+type GetStrangerInfo struct {
+	UserId  int64 `json:"user_id"`
+	NoCache bool  `json:"no_cache"`
+}
+
 type GetMsgReq struct {
 	MessageId int32 `json:"message_id"`
 }

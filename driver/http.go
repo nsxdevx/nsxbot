@@ -157,6 +157,13 @@ func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error
 	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, ACTION_GET_LOGIN_INFO, nil)
 }
 
+func (e *EmitterHttp) GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error) {
+	return httpAction[types.GetStrangerInfo, types.StrangerInfo](ctx, e.client, e.url, ACTION_GET_STRANGER_INFO, types.GetStrangerInfo{
+		UserId:  userId,
+		NoCache: noCache,
+	})
+}
+
 func (e *EmitterHttp) GetStatus(ctx context.Context) (*types.Status, error) {
 	return httpAction[any, types.Status](ctx, e.client, e.url, Action_GET_STATUS, nil)
 }

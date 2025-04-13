@@ -105,7 +105,7 @@ func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
 		panic(err)
 	}
 	emitters := make(map[int64]driver.Emitter, 1)
-	emitters[info.UserID] = oneDriver
+	emitters[info.UserId] = oneDriver
 	return &Engine{
 		listener:    oneDriver,
 		emitters:    emitters,
@@ -126,8 +126,8 @@ func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitte
 		if err != nil {
 			panic(err)
 		}
-		if _, ok := emitters[info.UserID]; !ok {
-			emitters[info.UserID] = e
+		if _, ok := emitters[info.UserId]; !ok {
+			emitters[info.UserId] = e
 		}
 	}
 	return &Engine{
