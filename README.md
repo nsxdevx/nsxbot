@@ -2,7 +2,9 @@
 
 <img align="right" style="width:150px; height:150px;" src="./docs/logo_redius.png">
 
+![Go](https://img.shields.io/badge/Go-00ADD8.svg?logo=go&logoColor=white)
 ![Badge](https://img.shields.io/badge/OneBot-11-black)
+[![qq group](https://img.shields.io/badge/Group-881412730-red?style=flat-square&logo=tencent-qq)](https://qm.qq.com/cgi-bin/qm/qr?k=d5DcTIKBYVmaHZHZ4BqwKaXop4ePjrh_&jump_from=webapi&authKey=nY7Yhr6GhgbS28XBw0nrH4M3tutmPF9U1+5m7GCaRgaABTqBHkTcHC1l1Sa1NFrh)
 
 Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](https://github.com/botuniverse/onebot-11) 协议的聊天机器人框架。
 
