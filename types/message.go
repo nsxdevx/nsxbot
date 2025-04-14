@@ -62,13 +62,13 @@ type At struct {
 }
 
 type Image struct {
-	Name       string `json:"name"`
-	Summary    string `json:"summary"`
+	Name       string `json:"name,omitzero"`
+	Summary    string `json:"summary,omitzero"`
 	File       string `json:"file"` // marketface
-	SubType    string `json:"subtype"`
-	FileID     string `json:"file_id"`
-	Url        string `json:"url"`
-	Path       string `json:"path"`
-	FileSize   string `json:"file_size"`
-	FileUnique string `json:"file_unique"`
+	SubType    string `json:"subtype,omitzero"`
+	FileID     string `json:"file_id,omitzero"`
+	Url        string `json:"url,omitzero"`
+	Path       string `json:"path,omitzero"`
+	FileSize   string `json:"file_size,omitzero"`
+	FileUnique string `json:"file_unique,omitzero"`
 }
