@@ -10,3 +10,7 @@ const (
 	ACTION_GET_STRANGER_INFO = "get_stranger_info"
 	Action_GET_STATUS        = "get_status"
 )
+
+type ctxKey string
+
+const CtxKeySelfId ctxKey = "selfId"

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/atopos31/nsxbot/nlog"
@@ -13,9 +14,10 @@ import (
 )
 
 type WServer struct {
-	conn *websocket.Conn
-	url  url.URL
-	log  *slog.Logger
+	conns map[int64]*websocket.Conn
+	mu    sync.RWMutex
+	url   url.URL
+	log   *slog.Logger
 }
 
 func NewWSverver(host string, path string) *WServer {
@@ -38,7 +40,12 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 			ws.log.Error("Upgrade", "err", err)
 			return
 		}
-		defer c.Close()
+		defer func() {
+			if err := c.Close(); err != nil {
+				ws.log.Error("Close", "err", err)
+			}
+		}()
+		var selfId int64
 		for {
 			_, content, err := c.ReadMessage()
 			if err != nil {
@@ -50,8 +57,15 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 				ws.log.Error("Invalid event", "err", err)
 				continue
 			}
+			selfId = event.SelfID
+			ws.mu.Lock()
+			ws.conns[event.SelfID] = c
+			ws.mu.Unlock()
 			eventChan <- event
 		}
+		ws.mu.Lock()
+		defer ws.mu.Unlock()
+		delete(ws.conns, selfId)
 	})
 	ws.log.Info("WS listener start... ", "addr", ws.url.Host)
 	server := &http.Server{Addr: ws.url.Host, Handler: mux}

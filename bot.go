@@ -57,7 +57,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
-			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfID, msg, event.Replyer)
+			nsxctx := NewContext(context.WithValue(ctx, driver.CtxKeySelfId, event.SelfID), emitter, event.Time, event.SelfID, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()
