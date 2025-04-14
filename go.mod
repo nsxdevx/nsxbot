@@ -3,6 +3,7 @@ module github.com/atopos31/nsxbot
 go 1.24.1
 
 require (
+	github.com/gorilla/websocket v1.5.3
 	github.com/lmittmann/tint v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
