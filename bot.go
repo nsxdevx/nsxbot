@@ -57,7 +57,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
-			nsxctx := NewContext(context.WithValue(ctx, driver.CtxKeySelfId, event.SelfID), emitter, event.Time, event.SelfID, msg, event.Replyer)
+			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfID, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()
@@ -90,23 +90,17 @@ func OnSelfsEvent[T types.Eventer](engine *Engine, selfIds ...int64) *EventHandl
 
 type Engine struct {
 	listener    driver.Listener
-	emitters    map[int64]driver.Emitter
+	emitterMux  driver.EmitterMux
 	taskLen     int
 	consumerNum int
 	consumers   map[types.EventType]consumer
 	logger      *slog.Logger
 }
 
-func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
-	selfId, err := oneDriver.GetSelfId(ctx)
-	if err != nil {
-		panic("Get selfId error: " + err.Error())
-	}
-	emitters := make(map[int64]driver.Emitter, 1)
-	emitters[selfId] = oneDriver
+func Default(ctx context.Context, driver driver.Driver) *Engine {
 	return &Engine{
-		listener:    oneDriver,
-		emitters:    emitters,
+		listener:    driver,
+		emitterMux:  driver,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
@@ -114,20 +108,10 @@ func Default(ctx context.Context, oneDriver driver.Driver) *Engine {
 	}
 }
 
-func New(ctx context.Context, listener driver.Listener, emitter ...driver.Emitter) *Engine {
-	emitters := make(map[int64]driver.Emitter, len(emitter))
-	for _, e := range emitter {
-		selfId, err := e.GetSelfId(ctx)
-		if err != nil {
-			panic("Get selfId error: " + err.Error())
-		}
-		if _, ok := emitters[selfId]; !ok {
-			emitters[selfId] = e
-		}
-	}
+func New(ctx context.Context, listener driver.Listener, emitterMux driver.EmitterMux) *Engine {
 	return &Engine{
 		listener:    listener,
-		emitters:    emitters,
+		emitterMux:  emitterMux,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
@@ -158,10 +142,6 @@ func (e *Engine) debug() {
 			e.logger.Info("Consumer", "chain", chain)
 		}
 	}
-	e.logger.Info("Emitters", "num", len(e.emitters))
-	for id, emitter := range e.emitters {
-		e.logger.Info("Emitter", "id", id, "type", reflect.TypeOf(emitter))
-	}
 }
 
 func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
@@ -173,10 +153,15 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 			e.logger.Debug("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
-					if selfId, ok := consumer.selfs(); ok && !slices.Contains(selfId, event.SelfID) {
+					if selfIds, ok := consumer.selfs(); ok && !slices.Contains(selfIds, event.SelfID) {
 						continue
 					}
-					if err := consumer.consume(ctx, e.emitters[event.SelfID], event); err != nil {
+					emitter, err := e.emitterMux.GetEmitter(event.SelfID)
+					if err != nil {
+						e.logger.Error("GetEmitter error", "error", err)
+						continue
+					}
+					if err := consumer.consume(ctx, emitter, event); err != nil {
 						e.logger.Error("Consume error", "error", err)
 						continue
 					}

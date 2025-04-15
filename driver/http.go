@@ -16,14 +16,22 @@ import (
 )
 
 type DriverHttp struct {
-	*EmitterHttp
+	*EmitterMuxHttp
 	*ListenerHttp
 }
 
 func NewDriverHttp(listenAddr string, emitterUrl string) *DriverHttp {
+	mux := NewEmitterMuxHttp()
+	emitter := NewEmitterHttp(emitterUrl)
+	selfId, err := emitter.GetSelfId(context.Background())
+	if err != nil {
+		slog.Error("Error get self id", "err", err)
+		return nil
+	}
+	mux.AddEmitter(selfId, emitter)
 	return &DriverHttp{
-		EmitterHttp:  NewEmitterHttp(emitterUrl),
-		ListenerHttp: NewListenerHttp(listenAddr),
+		EmitterMuxHttp: mux,
+		ListenerHttp:   NewListenerHttp(listenAddr),
 	}
 }
 
@@ -91,6 +99,37 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		}
 	}()
 	return server.ListenAndServe()
+}
+
+type EmitterMuxHttp struct {
+	emitters map[int64]Emitter
+}
+
+func NewEmitterMuxHttp(urls ...string) *EmitterMuxHttp {
+	emitters := make(map[int64]Emitter, len(urls))
+	for _, url := range urls {
+		emitter := NewEmitterHttp(url)
+		id, err := emitter.GetSelfId(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		emitters[id] = emitter
+	}
+	return &EmitterMuxHttp{
+		emitters: emitters,
+	}
+}
+
+func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
+	m.emitters[selfId] = emitter
+}
+
+func (m *EmitterMuxHttp) GetEmitter(selfId int64) (Emitter, error) {
+	emitter, ok := m.emitters[selfId]
+	if !ok {
+		return nil, fmt.Errorf("emitter not found")
+	}
+	return emitter, nil
 }
 
 type EmitterHttp struct {

@@ -13,12 +13,8 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	bot := nsxbot.New(ctx,
-		driver.NewListenerHttp(":8080"),
-		driver.NewEmitterHttp("http://localhost:4000"),
-		driver.NewEmitterHttp("http://localhost:4001"),
-	)
+	mux := driver.NewEmitterMuxHttp("http://localhost:4000", "http://localhost:4001")
+	bot := nsxbot.New(ctx, driver.NewListenerHttp(":8080"), mux)
 
 	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, 3808139675, 3958045985)
 

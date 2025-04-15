@@ -9,12 +9,17 @@ import (
 )
 
 type Driver interface {
-	Emitter
+	EmitterMux
 	Listener
 }
 
 type Listener interface {
 	Listen(ctx context.Context, eventChan chan<- types.Event) error
+}
+
+type EmitterMux interface {
+	GetEmitter(selfId int64) (Emitter, error)
+	AddEmitter(selfId int64, emitter Emitter)
 }
 
 type Emitter interface {
