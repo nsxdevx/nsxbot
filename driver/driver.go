@@ -34,7 +34,7 @@ type Emitter interface {
 }
 
 type Request[T any] struct {
-	Echo   int64  `json:"echo"`
+	Echo   string `json:"echo"`
 	Action Action `json:"action"`
 	Params T      `json:"params,omitempty"`
 }
@@ -43,6 +43,7 @@ type Response[T any] struct {
 	Status  string `json:"status"`
 	RetCode int    `json:"retCode"`
 	Data    T      `json:"data,omitempty"`
+	Echo    string `json:"echo"`
 }
 
 func contentToEvent(content []byte) (types.Event, error) {
