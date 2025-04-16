@@ -66,3 +66,7 @@ func main() {
 	bot.Run(ctx)
 }
 ```
+## 参考
+- [OneBot 11](https://github.com/botuniverse/onebot-11)
+- [OneBot 大典](https://github.com/tanebijs/onebot-pedia)
+- [NapCat 接口文档](https://napcat.apifox.cn/)
