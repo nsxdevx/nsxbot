@@ -3,6 +3,9 @@ package driver
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -36,12 +39,19 @@ func NewDriverHttp(listenAddr string, emitterUrl string) *DriverHttp {
 }
 
 type ListenerHttp struct {
-	mux  *http.ServeMux
-	addr string
-	log  *slog.Logger
+	mux   *http.ServeMux
+	addr  string
+	token string
+	log   *slog.Logger
 }
 
 type ListenerHttpOption func(*ListenerHttp)
+
+func ListenerHttpWithToken(token string) ListenerHttpOption {
+	return func(l *ListenerHttp) {
+		l.token = token
+	}
+}
 
 func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 	ListenerHttp := &ListenerHttp{
@@ -57,14 +67,9 @@ func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 
 func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event) error {
 	l.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		content, err := io.ReadAll(r.Body)
+		content,err := l.auth(w, r)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			l.log.Error("Read body error", "err", err)
+			l.log.Error("Invalid content", "err", err)
 			return
 		}
 		event, err := contentToEvent(content)
@@ -99,6 +104,32 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		}
 	}()
 	return server.ListenAndServe()
+}
+
+func (l *ListenerHttp) auth(w http.ResponseWriter, r *http.Request) ([]byte, error) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return nil, fmt.Errorf("method not allowed")
+	}
+	content, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil, err
+	}
+	if len(l.token) != 0 {
+		sign := r.Header.Get("X-Signature")
+		if len(sign) == 0 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return nil, fmt.Errorf("invalid token")
+		}
+		mac := hmac.New(sha1.New, []byte(l.token))
+		mac.Write(content)
+		if sign != "sha1="+hex.EncodeToString(mac.Sum(nil)) {
+			w.WriteHeader(http.StatusForbidden)
+			return nil, fmt.Errorf("invalid token")
+		}
+	}
+	return content, nil
 }
 
 type EmitterMuxHttp struct {
