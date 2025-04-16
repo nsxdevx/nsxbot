@@ -67,7 +67,7 @@ func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 
 func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event) error {
 	l.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		content,err := l.auth(w, r)
+		content, err := l.auth(w, r)
 		if err != nil {
 			l.log.Error("Invalid content", "err", err)
 			return
@@ -136,6 +136,20 @@ type EmitterMuxHttp struct {
 	emitters map[int64]Emitter
 }
 
+func NewEmitterMuxHttpSets(emitterhttps ...*EmitterHttp) *EmitterMuxHttp {
+	emitters := make(map[int64]Emitter, len(emitterhttps))
+	for _, emitter := range emitterhttps {
+		id, err := emitter.GetSelfId(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		emitters[id] = emitter
+	}
+	return &EmitterMuxHttp{
+		emitters: emitters,
+	}
+}
+
 func NewEmitterMuxHttp(urls ...string) *EmitterMuxHttp {
 	emitters := make(map[int64]Emitter, len(urls))
 	for _, url := range urls {
@@ -166,6 +180,7 @@ func (m *EmitterMuxHttp) GetEmitter(selfId int64) (Emitter, error) {
 type EmitterHttp struct {
 	client *http.Client
 	url    string
+	token  string
 	selfId *int64
 	log    *slog.Logger
 }
@@ -191,6 +206,12 @@ func WithEmitterHttpSelfId(selfId int64) EmitterHttpOption {
 	}
 }
 
+func WithEmitterHttpToken(token string) EmitterHttpOption {
+	return func(e *EmitterHttp) {
+		e.token = token
+	}
+}
+
 func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byte, error) {
 	reqbody, err := json.Marshal(params)
 	if err != nil {
@@ -213,38 +234,38 @@ func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byt
 }
 
 func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
-	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.url, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
+	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
 	})
 }
 
 func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
-	return httpAction[types.SendGrMsgReq, types.SendMsgRes](ctx, e.client, e.url, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
+	return httpAction[types.SendGrMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
 		GroupId: groupId,
 		Message: msg,
 	})
 }
 
 func (e *EmitterHttp) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error) {
-	return httpAction[types.GetMsgReq, types.GetMsgRes](ctx, e.client, e.url, ACTION_GET_MSG, types.GetMsgReq{
+	return httpAction[types.GetMsgReq, types.GetMsgRes](ctx, e.client, e.token, e.url, ACTION_GET_MSG, types.GetMsgReq{
 		MessageId: msgId,
 	})
 }
 
 func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
-	return httpAction[any, types.LoginInfo](ctx, e.client, e.url, ACTION_GET_LOGIN_INFO, nil)
+	return httpAction[any, types.LoginInfo](ctx, e.client, e.token, e.url, ACTION_GET_LOGIN_INFO, nil)
 }
 
 func (e *EmitterHttp) GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error) {
-	return httpAction[types.GetStrangerInfo, types.StrangerInfo](ctx, e.client, e.url, ACTION_GET_STRANGER_INFO, types.GetStrangerInfo{
+	return httpAction[types.GetStrangerInfo, types.StrangerInfo](ctx, e.client, e.token, e.url, ACTION_GET_STRANGER_INFO, types.GetStrangerInfo{
 		UserId:  userId,
 		NoCache: noCache,
 	})
 }
 
 func (e *EmitterHttp) GetStatus(ctx context.Context) (*types.Status, error) {
-	return httpAction[any, types.Status](ctx, e.client, e.url, Action_GET_STATUS, nil)
+	return httpAction[any, types.Status](ctx, e.client, e.token, e.url, Action_GET_STATUS, nil)
 }
 
 func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
@@ -260,7 +281,7 @@ func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
 	return *e.selfId, nil
 }
 
-func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl string, action string, params P) (*R, error) {
+func httpAction[P any, R any](ctx context.Context, client *http.Client, token string, baseurl string, action string, params P) (*R, error) {
 	reqbody, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
@@ -270,6 +291,7 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, baseurl 
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
