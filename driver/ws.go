@@ -18,13 +18,86 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+type WSClient struct {
+	*WSEmittersMux
+	echo  chan Response[json.RawMessage]
+	urls  []string
+	token string
+	log   *slog.Logger
+}
+
+func NewWSClient(urls ...string) *WSClient {
+	return &WSClient{
+		WSEmittersMux: &WSEmittersMux{
+			emitters: make(map[int64]Emitter),
+		},
+		echo:  make(chan Response[json.RawMessage], 100),
+		urls:  urls,
+		log:   nlog.Logger(),
+		token: uuid.NewString(),
+	}
+}
+
+func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) error {
+	for _, url := range ws.urls {
+		go func(ctx context.Context) {
+			ticker := time.NewTicker(3 * time.Second)
+			url = "ws://" + url
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					c, _, err := websocket.DefaultDialer.Dial(url, nil)
+					if err != nil {
+						ws.log.Error("Dial", "err", err)
+						continue
+					}
+					defer func() {
+						if err := c.Close(); err != nil {
+							ws.log.Error("Close", "err", err)
+						}
+					}()
+					var selfId int64
+					defer ws.RemoveEmitter(selfId)
+					for {
+						_, content, err := c.ReadMessage()
+						if err != nil {
+							ws.log.Error("Read", "err", err)
+							break
+						}
+						if gjson.Get(string(content), "echo").Exists() {
+							var echo Response[json.RawMessage]
+							if err := json.Unmarshal(content, &echo); err != nil {
+								ws.log.Error("Invalid echo", "err", err)
+								continue
+							}
+							ws.echo <- echo
+							continue
+						}
+						event, err := contentToEvent(content)
+						if err != nil {
+							ws.log.Error("Invalid event", "err", err)
+							continue
+						}
+						selfId = event.SelfID
+						ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
+						eventChan <- event
+					}
+				}
+			}
+		}(ctx)
+	}
+	<-ctx.Done()
+	return nil
+}
+
 type WServer struct {
-	mu       sync.RWMutex
-	emitters map[int64]Emitter
-	echo     chan Response[json.RawMessage]
-	url      url.URL
-	token    string
-	log      *slog.Logger
+	*WSEmittersMux
+	echo  chan Response[json.RawMessage]
+	url   url.URL
+	token string
+	log   *slog.Logger
 }
 
 type WServerOption func(*WServer)
@@ -35,10 +108,12 @@ func WSerevrWithToken(token string) WServerOption {
 	}
 }
 
-func NewWSverver(host string, path string,opts ...WServerOption) *WServer {
+func NewWSverver(host string, path string, opts ...WServerOption) *WServer {
 	ws := &WServer{
-		emitters: make(map[int64]Emitter),
-		echo:     make(chan Response[json.RawMessage], 100),
+		WSEmittersMux: &WSEmittersMux{
+			emitters: make(map[int64]Emitter),
+		},
+		echo: make(chan Response[json.RawMessage], 100),
 		url: url.URL{
 			Scheme: "ws",
 			Host:   host,
@@ -71,6 +146,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 			}
 		}()
 		var selfId int64
+		defer ws.RemoveEmitter(selfId)
 		for {
 			_, content, err := c.ReadMessage()
 			if err != nil {
@@ -92,12 +168,9 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 				continue
 			}
 			selfId = event.SelfID
-			ws.AddEmitter(event.SelfID, NewEmitterWS(event.SelfID, c, ws.echo))
+			ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
 			eventChan <- event
 		}
-		ws.mu.Lock()
-		delete(ws.emitters, selfId)
-		ws.mu.Unlock()
 	})
 	ws.log.Info("WS listener start... ", "addr", ws.url.Host)
 	server := &http.Server{Addr: ws.url.Host, Handler: mux}
@@ -124,13 +197,24 @@ func (ws *WServer) auth(r *http.Request) error {
 	return fmt.Errorf("invalid token")
 }
 
-func (ws *WServer) AddEmitter(selfId int64, emitter Emitter) {
+type WSEmittersMux struct {
+	mu       sync.RWMutex
+	emitters map[int64]Emitter
+}
+
+func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
 }
 
-func (ws *WServer) GetEmitter(selfId int64) (Emitter, error) {
+func (ws *WSEmittersMux) RemoveEmitter(selfId int64) {
+	ws.mu.Lock()
+	defer ws.mu.Unlock()
+	delete(ws.emitters, selfId)
+}
+
+func (ws *WSEmittersMux) GetEmitter(selfId int64) (Emitter, error) {
 	ws.mu.RLock()
 	defer ws.mu.RUnlock()
 	emitter, ok := ws.emitters[selfId]

@@ -169,6 +169,10 @@ func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
 	m.emitters[selfId] = emitter
 }
 
+func (m *EmitterMuxHttp) RemoveEmitter(selfId int64) {
+	delete(m.emitters, selfId)
+}
+
 func (m *EmitterMuxHttp) GetEmitter(selfId int64) (Emitter, error) {
 	emitter, ok := m.emitters[selfId]
 	if !ok {
