@@ -23,11 +23,20 @@ type WServer struct {
 	emitters map[int64]Emitter
 	echo     chan Response[json.RawMessage]
 	url      url.URL
+	token    string
 	log      *slog.Logger
 }
 
-func NewWSverver(host string, path string) *WServer {
-	return &WServer{
+type WServerOption func(*WServer)
+
+func WSerevrWithToken(token string) WServerOption {
+	return func(ws *WServer) {
+		ws.token = token
+	}
+}
+
+func NewWSverver(host string, path string,opts ...WServerOption) *WServer {
+	ws := &WServer{
 		emitters: make(map[int64]Emitter),
 		echo:     make(chan Response[json.RawMessage], 100),
 		url: url.URL{
@@ -37,11 +46,19 @@ func NewWSverver(host string, path string) *WServer {
 		},
 		log: nlog.Logger(),
 	}
+	for _, opt := range opts {
+		opt(ws)
+	}
+	return ws
 }
 
 func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(ws.url.Path, func(w http.ResponseWriter, r *http.Request) {
+		if err := ws.auth(r); err != nil {
+			ws.log.Error("Invalid token", "err", err)
+			return
+		}
 		var upgrader = websocket.Upgrader{}
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -94,6 +111,17 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 		}
 	}()
 	return server.ListenAndServe()
+}
+
+func (ws *WServer) auth(r *http.Request) error {
+	if len(ws.token) == 0 {
+		return nil
+	}
+	token := r.Header.Get("Authorization")
+	if strings.EqualFold("Bearer "+ws.token, token) {
+		return nil
+	}
+	return fmt.Errorf("invalid token")
 }
 
 func (ws *WServer) AddEmitter(selfId int64, emitter Emitter) {
