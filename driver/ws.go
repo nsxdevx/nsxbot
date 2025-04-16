@@ -20,7 +20,7 @@ import (
 
 type WServer struct {
 	mu       sync.RWMutex
-	emitters map[int64]*EmitterWS
+	emitters map[int64]Emitter
 	echo     chan Response[json.RawMessage]
 	url      url.URL
 	log      *slog.Logger
@@ -28,7 +28,7 @@ type WServer struct {
 
 func NewWSverver(host string, path string) *WServer {
 	return &WServer{
-		emitters: make(map[int64]*EmitterWS),
+		emitters: make(map[int64]Emitter),
 		echo:     make(chan Response[json.RawMessage], 100),
 		url: url.URL{
 			Scheme: "ws",
@@ -80,7 +80,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 		}
 		ws.mu.Lock()
 		delete(ws.emitters, selfId)
-		defer ws.mu.Lock()
+		ws.mu.Unlock()
 	})
 	ws.log.Info("WS listener start... ", "addr", ws.url.Host)
 	server := &http.Server{Addr: ws.url.Host, Handler: mux}
@@ -96,13 +96,13 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 	return server.ListenAndServe()
 }
 
-func (ws *WServer) AddEmitter(selfId int64, emitter *EmitterWS) {
+func (ws *WServer) AddEmitter(selfId int64, emitter Emitter) {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
 }
 
-func (ws *WServer) GetEmitter(selfId int64) (*EmitterWS, error) {
+func (ws *WServer) GetEmitter(selfId int64) (Emitter, error) {
 	ws.mu.RLock()
 	defer ws.mu.RUnlock()
 	emitter, ok := ws.emitters[selfId]
@@ -113,10 +113,10 @@ func (ws *WServer) GetEmitter(selfId int64) (*EmitterWS, error) {
 }
 
 type EmitterWS struct {
-	mu     sync.RWMutex
+	mu     sync.Mutex
 	conn   *websocket.Conn
 	echo   chan Response[json.RawMessage]
-	selfId *int64
+	selfId int64
 	log    *slog.Logger
 }
 
@@ -124,9 +124,75 @@ func NewEmitterWS(selfId int64, conn *websocket.Conn, echo chan Response[json.Ra
 	return &EmitterWS{
 		conn:   conn,
 		echo:   echo,
-		selfId: &selfId,
+		selfId: selfId,
 		log:    nlog.Logger(),
 	}
+}
+
+func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
+		UserId:  userId,
+		Message: msg,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
+		GroupId: groupId,
+		Message: msg,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error) {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_GET_MSG, types.GetMsgReq{
+		MessageId: msgId,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.GetMsgRes](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
+	e.mu.Lock()
+	echoId, err := wsAction[any](e.conn, ACTION_GET_LOGIN_INFO, nil)
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.LoginInfo](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error) {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_GET_STRANGER_INFO, types.GetStrangerInfo{
+		UserId:  userId,
+		NoCache: noCache,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.StrangerInfo](ctx, echoId, e.echo)
 }
 
 func (e *EmitterWS) GetStatus(ctx context.Context) (*types.Status, error) {
@@ -138,6 +204,34 @@ func (e *EmitterWS) GetStatus(ctx context.Context) (*types.Status, error) {
 	}
 	e.mu.Unlock()
 	return wsWait[types.Status](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) GetSelfId(ctx context.Context) (int64, error) {
+	return e.selfId, nil
+}
+
+func (e *EmitterWS) Raw(ctx context.Context, action Action, params any) ([]byte, error) {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, action, params)
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case echo := <-e.echo:
+			if !strings.EqualFold(echoId, echo.Echo) {
+				e.echo <- echo
+				continue
+			}
+			return json.Marshal(echo)
+		}
+	}
 }
 
 func wsAction[P any](conn *websocket.Conn, action string, params P) (string, error) {

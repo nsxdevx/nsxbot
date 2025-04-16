@@ -39,6 +39,7 @@ var (
 	ErrNoAvailable = errors.New("no replayer available")
 )
 
+// only http support
 func (c *Context[T]) Reply(text string) error {
 	if c.replayer != nil {
 		return c.replayer.Reply(text)

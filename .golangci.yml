@@ -3,4 +3,5 @@ linters:
   exclusions:
     paths:
       - examples
+      - test
 

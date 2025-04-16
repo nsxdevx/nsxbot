@@ -13,8 +13,9 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mux := driver.NewEmitterMuxHttp("http://localhost:4000", "http://localhost:4001")
-	bot := nsxbot.New(ctx, driver.NewListenerHttp(":8080"), mux)
+	// mux := driver.NewEmitterMuxHttp("http://localhost:4000", "http://localhost:4001")
+	// bot := nsxbot.New(ctx, driver.NewListenerHttp(":8080"), mux)
+	bot := nsxbot.Default(ctx, driver.NewWSverver(":8081", "/"))
 
 	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, 3808139675, 3958045985)
 
@@ -26,6 +27,8 @@ func main() {
 		}
 		slog.Info("ping!")
 		ctx.Reply("在!这里是:" + info.NickName)
+		var msg types.MeaasgeChain
+		ctx.SendGrMsg(ctx, 517170497, msg.Text("在!这里是:"+info.NickName))
 	}, filter.OnlyGroups(517170497), filter.OnlyGrUsers(2945294768))
 
 	// Run
