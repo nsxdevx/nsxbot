@@ -255,6 +255,9 @@ func wsWait[R any](ctx context.Context, echoId string, echocChan chan Response[j
 				echocChan <- echo
 				continue
 			}
+			if echo.Status == "failed" {
+				return nil, fmt.Errorf("action failed, rawdata: %x, plase see onebot logs", echo.Status)
+			}
 			var res R
 			if err := json.Unmarshal(echo.Data, &res); err != nil {
 				return nil, err
