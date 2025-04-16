@@ -161,7 +161,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 						e.logger.Error("GetEmitter error", "error", err)
 						continue
 					}
-					if err := consumer.consume(ctx, emitter, event); err != nil {
+					if err := consumer.consume(context.Background(), emitter, event); err != nil {
 						e.logger.Error("Consume error", "error", err)
 						continue
 					}
