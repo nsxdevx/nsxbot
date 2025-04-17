@@ -26,6 +26,7 @@ type Emitter interface {
 	SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error)
+	DelMsg(ctx context.Context, messageId int32) error
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error)
 	GetStatus(ctx context.Context) (*types.Status, error)

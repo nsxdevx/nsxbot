@@ -18,3 +18,7 @@ type GetStrangerInfo struct {
 type GetMsgReq struct {
 	MessageId int32 `json:"message_id"`
 }
+
+type DelMsgReq struct {
+	MessageId int32 `json:"message_id"`
+}

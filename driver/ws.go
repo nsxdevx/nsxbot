@@ -274,6 +274,20 @@ func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg types.Meaa
 	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
 }
 
+func (e *EmitterWS) DelMsg(ctx context.Context, messageId int32) error {
+	e.mu.Lock()
+	echoId, err := wsAction[any](e.conn, ACTION_DELETE_MSG, types.DelMsgReq{
+		MessageId: messageId,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return err
+	}
+	e.mu.Unlock()
+	_, err = wsWait[any](ctx, echoId, e.echo)
+	return err
+}
+
 func (e *EmitterWS) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error) {
 	e.mu.Lock()
 	echoId, err := wsAction(e.conn, ACTION_GET_MSG, types.GetMsgReq{

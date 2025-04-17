@@ -28,8 +28,7 @@ func NewDriverHttp(listenAddr string, emitterUrl string) *DriverHttp {
 	emitter := NewEmitterHttp(emitterUrl)
 	selfId, err := emitter.GetSelfId(context.Background())
 	if err != nil {
-		slog.Error("Error get self id", "err", err)
-		return nil
+		panic(err)
 	}
 	mux.AddEmitter(selfId, emitter)
 	return &DriverHttp{
@@ -255,6 +254,13 @@ func (e *EmitterHttp) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes
 	return httpAction[types.GetMsgReq, types.GetMsgRes](ctx, e.client, e.token, e.url, ACTION_GET_MSG, types.GetMsgReq{
 		MessageId: msgId,
 	})
+}
+
+func (e *EmitterHttp) DelMsg(ctx context.Context, messageId int32) error {
+	_, err := httpAction[types.DelMsgReq, any](ctx, e.client, e.token, e.url, ACTION_DELETE_MSG, types.DelMsgReq{
+		MessageId: messageId,
+	})
+	return err
 }
 
 func (e *EmitterHttp) GetLoginInfo(ctx context.Context) (*types.LoginInfo, error) {
