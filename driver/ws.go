@@ -18,37 +18,42 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+type WSnode struct {
+	Url   string
+	Token string
+}
+
 type WSClient struct {
 	*WSEmittersMux
 	echo  chan Response[json.RawMessage]
-	urls  []string
-	token string
+	nodes []WSnode
 	log   *slog.Logger
 }
 
-func NewWSClient(urls ...string) *WSClient {
+func NewWSClient(nodes ...WSnode) *WSClient {
 	return &WSClient{
 		WSEmittersMux: &WSEmittersMux{
 			emitters: make(map[int64]Emitter),
 		},
 		echo:  make(chan Response[json.RawMessage], 100),
-		urls:  urls,
+		nodes: nodes,
 		log:   nlog.Logger(),
-		token: uuid.NewString(),
 	}
 }
 
 func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) error {
-	for _, url := range ws.urls {
+	for _, node := range ws.nodes {
 		go func(ctx context.Context) {
 			ticker := time.NewTicker(3 * time.Second)
-			url = "ws://" + url
+			url := "ws://" + node.Url
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case <-ticker.C:
-					c, _, err := websocket.DefaultDialer.Dial(url, nil)
+					header := make(http.Header, 1)
+					header.Set("Authorization", "Bearer "+node.Token)
+					c, _, err := websocket.DefaultDialer.Dial(url, header)
 					if err != nil {
 						ws.log.Error("Dial", "err", err)
 						continue
