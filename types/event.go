@@ -61,11 +61,11 @@ type EventMsg interface {
 
 type BaseMessage struct {
 	SubType    string    `json:"sub_type"`
-	MessageId  int32     `json:"message_id"`
+	MessageId  int       `json:"message_id"`
 	UserId     int64     `json:"user_id"`
 	Messages   []Message `json:"message"`
 	RawMessage string    `json:"raw_message"`
-	Font       int32     `json:"font"`
+	Font       int       `json:"font"`
 	Sender     Sender    `json:"sender"`
 }
 
@@ -105,7 +105,7 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
-func (em *BaseMessage) Id() int32 {
+func (em *BaseMessage) Id() int {
 	return em.MessageId
 }
 
@@ -172,7 +172,7 @@ type Sender struct {
 	UserID   int64  `json:"user_id"`
 	Nickname string `json:"nickname"`
 	Sex      string `json:"sex"`
-	Age      int32  `json:"age"`
+	Age      int    `json:"age"`
 }
 
 type EventNotice struct {

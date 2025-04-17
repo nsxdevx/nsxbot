@@ -250,13 +250,13 @@ func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg types.Me
 	})
 }
 
-func (e *EmitterHttp) GetMsg(ctx context.Context, msgId int32) (*types.GetMsgRes, error) {
+func (e *EmitterHttp) GetMsg(ctx context.Context, msgId int) (*types.GetMsgRes, error) {
 	return httpAction[types.GetMsgReq, types.GetMsgRes](ctx, e.client, e.token, e.url, ACTION_GET_MSG, types.GetMsgReq{
 		MessageId: msgId,
 	})
 }
 
-func (e *EmitterHttp) DelMsg(ctx context.Context, messageId int32) error {
+func (e *EmitterHttp) DelMsg(ctx context.Context, messageId int) error {
 	_, err := httpAction[types.DelMsgReq, any](ctx, e.client, e.token, e.url, ACTION_DELETE_MSG, types.DelMsgReq{
 		MessageId: messageId,
 	})
