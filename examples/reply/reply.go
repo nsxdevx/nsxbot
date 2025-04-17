@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
+	"strconv"
 
 	"github.com/atopos31/nsxbot"
 	"github.com/atopos31/nsxbot/driver"
@@ -16,6 +18,7 @@ func main() {
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
+	adminuin, _ := strconv.ParseInt(os.Getenv("ADMIN_UIN"), 10, 64)
 	pvt.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
@@ -25,7 +28,7 @@ func main() {
 		slog.Info("Private Message", "message", text.Text)
 		ctx.Reply(text.Text)
 		var msg types.MeaasgeChain
-		ctx.SendPvtMsg(ctx, 2945294768, msg.Text("收到回复了吗？").Br().Text("2333333333"))
+		ctx.SendPvtMsg(ctx, adminuin, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 
 	// Run

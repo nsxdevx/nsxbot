@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
+	"strconv"
 
 	"github.com/atopos31/nsxbot"
 	"github.com/atopos31/nsxbot/driver"
@@ -13,11 +15,15 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// mux := driver.NewEmitterMuxHttp("http://localhost:4000", "http://localhost:4001")
-	// bot := nsxbot.New(ctx, driver.NewListenerHttp(":8080"), mux)
+
+	aili0uin, _ := strconv.ParseInt(os.Getenv("AILI_UIN_0"), 10, 64)
+	aili1uin, _ := strconv.ParseInt(os.Getenv("AILI_UIN_1"), 10, 64)
+	adminuin, _ := strconv.ParseInt(os.Getenv("ADMIN_UIN"), 10, 64)
+	groupId, _ := strconv.ParseInt(os.Getenv("TEST_GROUP"), 10, 64)
+
 	bot := nsxbot.Default(ctx, driver.NewWSverver(":8081", "/"))
 
-	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, 3808139675, 3958045985)
+	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, aili0uin, aili1uin)
 
 	pvt.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
 		info, err := ctx.GetLoginInfo(ctx)
@@ -28,8 +34,8 @@ func main() {
 		slog.Info("ping!")
 		ctx.Reply("在!这里是:" + info.NickName)
 		var msg types.MeaasgeChain
-		ctx.SendGrMsg(ctx, 517170497, msg.Text("在!这里是:"+info.NickName))
-	}, filter.OnlyGroups(517170497), filter.OnlyGrUsers(2945294768))
+		ctx.SendGrMsg(ctx, groupId, msg.Text("在!这里是:"+info.NickName))
+	}, filter.OnlyGroups(groupId), filter.OnlyGrUsers(adminuin))
 
 	// Run
 	bot.Run(ctx)
