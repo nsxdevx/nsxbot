@@ -61,6 +61,10 @@ type At struct {
 	QQ string `json:"qq"`
 }
 
+type Reply struct {
+	Id int `json:"id"`
+}
+
 type Image struct {
 	Name       string `json:"name,omitzero"`
 	Summary    string `json:"summary,omitzero"`

@@ -38,6 +38,32 @@ func (m MeaasgeChain) Face(id string) MeaasgeChain {
 	})
 }
 
+func (m MeaasgeChain) At(qq string) MeaasgeChain {
+	data, err := json.Marshal(At{
+		QQ: qq,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "at",
+		Data: data,
+	})
+}
+
+func (m MeaasgeChain) Reply(id int) MeaasgeChain {
+	data, err := json.Marshal(Reply{
+		Id: id,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "reply",
+		Data: data,
+	})
+}
+
 // such as:
 // network URL: https://www.example.com/image.png
 // local file:///C:\\Users\Richard\Pictures\1.png see rfc 8089

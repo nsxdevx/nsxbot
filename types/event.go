@@ -133,6 +133,10 @@ func (em *BaseMessage) Ats() ([]At, int) {
 	return all[At]("at", em.Messages)
 }
 
+func (em *BaseMessage) ReplyFirst() (*Reply, error) {
+	return first[Reply]("reply", em.Messages)
+}
+
 func (em *BaseMessage) ImageFirst() (*Image, error) {
 	return first[Image]("image", em.Messages)
 }
