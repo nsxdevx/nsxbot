@@ -32,7 +32,6 @@ func main() {
 			return
 		}
 		slog.Info("ping!")
-		ctx.Reply("在!这里是:" + info.NickName)
 		var msg types.MeaasgeChain
 		ctx.SendGrMsg(ctx, groupId, msg.Text("在!这里是:"+info.NickName))
 	}, filter.OnlyGroups(groupId), filter.OnlyGrUsers(adminuin))

@@ -77,15 +77,15 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 			l.log.Error("Invalid event", "err", err)
 			return
 		}
-		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) {
+		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			event.Replyer = &types.Replyer{
+			event.Replyer = &types.HttpReplyer{
 				Ctx:    ctx,
 				Writer: w,
 				Cancel: cancel,
 			}
 			eventChan <- event
-			<-event.Replyer.Ctx.Done()
+			<-ctx.Done()
 		} else {
 			eventChan <- event
 		}

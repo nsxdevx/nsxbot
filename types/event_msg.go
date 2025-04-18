@@ -1,10 +1,8 @@
 package types
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
 )
 
 type EventType = string
@@ -21,28 +19,7 @@ type Event struct {
 	Time    int64
 	SelfID  int64
 	RawData []byte
-	Replyer *Replyer
-}
-
-type Replyer struct {
-	Ctx    context.Context
-	Writer http.ResponseWriter
-	Cancel context.CancelFunc
-}
-
-func (r *Replyer) Reply(text string) error {
-	if r.Ctx.Err() != nil {
-		return r.Ctx.Err()
-	}
-	body, err := json.Marshal(struct {
-		Reply string `json:"reply"`
-	}{Reply: text})
-	if err != nil {
-		return err
-	}
-	_, err = r.Writer.Write(body)
-	r.Cancel()
-	return err
+	Replyer Replayer
 }
 
 type Eventer interface {
@@ -71,6 +48,13 @@ type BaseMessage struct {
 	Sender     Sender    `json:"sender"`
 }
 
+type Sender struct {
+	UserID   int64  `json:"user_id"`
+	Nickname string `json:"nickname"`
+	Sex      string `json:"sex"`
+	Age      int    `json:"age"`
+}
+
 type EventPvtMsg struct {
 	*BaseMessage
 }
@@ -79,33 +63,18 @@ func (e EventPvtMsg) Type() EventType {
 	return "message:private"
 }
 
-type Anonymous struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
-	Flag string `json:"flag"`
+func (em *BaseMessage) Reply(replyer Replayer, text string) error {
+	if replyer == nil {
+		return ErrNoAvailable
+	}
+	data, err := json.Marshal(struct {
+		Reply string `json:"reply"`
+	}{Reply: text})
+	if err != nil {
+		return err
+	}
+	return replyer.Reply(data)
 }
-
-type EventGrMsg struct {
-	*BaseMessage
-	GroupId   int64      `json:"group_id"`
-	Anonymous *Anonymous `json:"anonymous"`
-}
-
-func (e EventGrMsg) Type() EventType {
-	return "message:group"
-}
-
-type EventAllMsg struct {
-	*EventGrMsg
-}
-
-func (em EventAllMsg) Type() EventType {
-	return "message"
-}
-
-var (
-	ErrNotFound = errors.New("not found")
-)
 
 func (em *BaseMessage) Id() int {
 	return em.MessageId
@@ -147,6 +116,10 @@ func (em *BaseMessage) Images() ([]Image, int) {
 	return all[Image]("image", em.Messages)
 }
 
+var (
+	ErrNotFound = errors.New("not found")
+)
+
 func first[T any](msgType string, msg []Message) (*T, error) {
 	for _, msg := range msg {
 		if msg.Type == msgType {
@@ -174,9 +147,26 @@ func all[T any](msgType string, msg []Message) ([]T, int) {
 	return data, len(data)
 }
 
-type Sender struct {
-	UserID   int64  `json:"user_id"`
-	Nickname string `json:"nickname"`
-	Sex      string `json:"sex"`
-	Age      int    `json:"age"`
+type EventGrMsg struct {
+	*BaseMessage
+	GroupId   int64      `json:"group_id"`
+	Anonymous *Anonymous `json:"anonymous"`
+}
+
+type Anonymous struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+	Flag string `json:"flag"`
+}
+
+func (e EventGrMsg) Type() EventType {
+	return "message:group"
+}
+
+type EventAllMsg struct {
+	*EventGrMsg
+}
+
+func (em EventAllMsg) Type() EventType {
+	return "message"
 }
