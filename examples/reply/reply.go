@@ -14,7 +14,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	bot := nsxbot.Default(ctx, driver.NewWSverver(":8081", "/"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 

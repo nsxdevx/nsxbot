@@ -57,6 +57,8 @@ type EventMsg interface {
 	Faces() ([]Face, int)
 	AtFirst() (*At, error)
 	Ats() ([]At, int)
+	ImageFirst() (*Image, error)
+	Images() ([]Image, int)
 }
 
 type BaseMessage struct {

@@ -38,6 +38,14 @@ func (m MockEventMsg) Texts() ([]types.Text, int) {
 	return []types.Text{}, 0
 }
 
+func (m MockEventMsg) ImageFirst() (*types.Image, error) {
+	return &types.Image{}, nil
+}
+
+func (m MockEventMsg) Images() ([]types.Image, int) {
+	return []types.Image{}, 0
+}
+
 func (m MockEventMsg) Type() string {
 	return "mock"
 }
