@@ -54,7 +54,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	bot := nsxbot.Default(ctx, driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
@@ -66,7 +66,10 @@ func main() {
 			return
 		}
 		slog.Info("Private Message", "message", text.Text)
-		ctx.Reply(text.Text)
+		if err := ctx.Msg.Reply(ctx, text.Text); err != nil {
+			slog.Error("Error replying to message", "error", err)
+			return
+		}
 		var msg types.MeaasgeChain
 		ctx.SendPvtMsg(ctx, adminuin, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
