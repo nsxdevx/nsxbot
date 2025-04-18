@@ -97,7 +97,7 @@ type Engine struct {
 	logger      *slog.Logger
 }
 
-func Default(ctx context.Context, driver driver.Driver) *Engine {
+func Default(driver driver.Driver) *Engine {
 	return &Engine{
 		listener:    driver,
 		emitterMux:  driver,
@@ -108,7 +108,7 @@ func Default(ctx context.Context, driver driver.Driver) *Engine {
 	}
 }
 
-func New(ctx context.Context, listener driver.Listener, emitterMux driver.EmitterMux) *Engine {
+func New(listener driver.Listener, emitterMux driver.EmitterMux) *Engine {
 	return &Engine{
 		listener:    listener,
 		emitterMux:  emitterMux,

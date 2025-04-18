@@ -21,7 +21,7 @@ func main() {
 	adminuin, _ := strconv.ParseInt(os.Getenv("ADMIN_UIN"), 10, 64)
 	groupId, _ := strconv.ParseInt(os.Getenv("TEST_GROUP"), 10, 64)
 
-	bot := nsxbot.Default(ctx, driver.NewWSverver(":8081", "/"))
+	bot := nsxbot.Default(driver.NewWSverver(":8081", "/"))
 
 	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, aili0uin, aili1uin)
 
