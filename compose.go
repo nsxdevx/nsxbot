@@ -1,11 +1,23 @@
 package nsxbot
 
 import (
+	"reflect"
+	"runtime"
+	"strings"
+
 	"github.com/atopos31/nsxbot/filter"
 	"github.com/atopos31/nsxbot/types"
 )
 
 type FilterChain[T any] []filter.Filter[T]
+
+func (f FilterChain[T]) debug() string {
+	var info string
+	for _, filter := range f {
+		info += strings.TrimPrefix(runtime.FuncForPC(reflect.ValueOf(filter).Pointer()).Name()+"->", "main.main.")
+	}
+	return info
+}
 
 type HandlersChain[T any] []HandlerFunc[T]
 

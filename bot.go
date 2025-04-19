@@ -24,6 +24,7 @@ type EventHandler[T types.Eventer] struct {
 	selfIds []int64
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
+	log         *slog.Logger
 }
 
 func (h *EventHandler[T]) selfs() ([]int64, bool) {
@@ -34,9 +35,7 @@ func (h *EventHandler[T]) infos() []string {
 	var infos []string
 	for _, handlerEnd := range h.handlerEnds {
 		var info string
-		for _, filter := range handlerEnd.fillers {
-			info += strings.TrimPrefix(runtime.FuncForPC(reflect.ValueOf(filter).Pointer()).Name()+"->", "main.main.")
-		}
+		info += handlerEnd.fillers.debug()
 		handler := runtime.FuncForPC(reflect.ValueOf(handlerEnd.handlers[len(handlerEnd.handlers)-1]).Pointer()).Name()
 		handler = strings.TrimPrefix(handler, "main.main.")
 		info += handler
@@ -50,6 +49,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
 	}
+	h.log.Debug("Consumed", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
 	for _, handlerEnd := range h.handlerEnds {
 		go func() {
 			for _, filter := range handlerEnd.fillers {
@@ -57,6 +57,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
+			h.log.Debug("Handled", "types", event.Types, "time", event.Time, "selfID", event.SelfID,"fillter",handlerEnd.fillers.debug())
 			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfID, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
@@ -75,6 +76,7 @@ type consumer interface {
 func OnEvent[T types.Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler := new(EventHandler[T])
 	eventHandler.root = eventHandler
+	eventHandler.log = engine.log
 
 	var eventer T
 	engine.consumers[eventer.Type()] = eventHandler
@@ -94,7 +96,7 @@ type Engine struct {
 	taskLen     int
 	consumerNum int
 	consumers   map[types.EventType]consumer
-	logger      *slog.Logger
+	log         *slog.Logger
 }
 
 func Default(driver driver.Driver) *Engine {
@@ -104,7 +106,7 @@ func Default(driver driver.Driver) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger:      nlog.Logger(),
+		log:         nlog.Logger(),
 	}
 }
 
@@ -115,7 +117,7 @@ func New(listener driver.Listener, emitterMux driver.EmitterMux) *Engine {
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
 		consumers:   make(map[types.EventType]consumer),
-		logger:      nlog.Logger(),
+		log:         nlog.Logger(),
 	}
 }
 
@@ -128,8 +130,8 @@ func (e *Engine) SetConsumerNum(consumerNum int) {
 }
 
 func (e *Engine) debug() {
-	e.logger.Info("Engine", "taskLen", e.taskLen, "consumerNum", e.consumerNum)
-	e.logger.Info("Consumers", "num", len(e.consumers))
+	e.log.Info("Engine", "taskLen", e.taskLen, "consumerNum", e.consumerNum)
+	e.log.Info("Consumers", "num", len(e.consumers))
 	for t, consumer := range e.consumers {
 		for _, info := range consumer.infos() {
 			chain := "onebot->"
@@ -139,7 +141,7 @@ func (e *Engine) debug() {
 				chain += "all->"
 			}
 			chain += t + "->" + info
-			e.logger.Info("Consumer", "chain", chain)
+			e.log.Info("Consumer", "chain", chain)
 		}
 	}
 }
@@ -150,7 +152,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 		case <-ctx.Done():
 			return
 		case event := <-task:
-			e.logger.Debug("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
+			e.log.Debug("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
 					if selfIds, ok := consumer.selfs(); ok && !slices.Contains(selfIds, event.SelfID) {
@@ -158,14 +160,13 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 					}
 					emitter, err := e.emitterMux.GetEmitter(event.SelfID)
 					if err != nil {
-						e.logger.Error("GetEmitter error", "error", err)
+						e.log.Error("GetEmitter error", "error", err)
 						continue
 					}
 					if err := consumer.consume(context.Background(), emitter, event); err != nil {
-						e.logger.Error("Consume error", "error", err)
+						e.log.Error("Consume error", "error", err)
 						continue
 					}
-					e.logger.Info("Consumed", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
 				}
 			}
 		}
@@ -177,6 +178,9 @@ func (e *Engine) Run(ctx context.Context) {
 	task := make(chan types.Event, e.taskLen)
 	for range e.consumerNum {
 		go e.consumerStart(ctx, task)
+	}
+	if nlog.Leveler == slog.LevelDebug {
+		e.log.Warn("Run debug mode, please set env NSX_MODE == release use nlog.SetLevel(slog.LevelInfo) to disable debug mode")
 	}
 	if err := e.listener.Listen(ctx, task); err != nil {
 		panic(err)
