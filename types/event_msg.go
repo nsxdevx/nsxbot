@@ -5,27 +5,6 @@ import (
 	"errors"
 )
 
-type EventType = string
-
-const (
-	POST_TYPE_MESSAGE    = "message"
-	POST_TYPE_NOTICE     = "notice"
-	POST_TYPE_REQUEST    = "request"
-	POST_TYPE_META_ENEVT = "meta_event"
-)
-
-type Event struct {
-	Types   []EventType
-	Time    int64
-	SelfID  int64
-	RawData []byte
-	Replyer Replayer
-}
-
-type Eventer interface {
-	Type() EventType
-}
-
 type EventMsg interface {
 	Eventer
 	TextFirst() (*Text, error)
@@ -53,14 +32,6 @@ type Sender struct {
 	Nickname string `json:"nickname"`
 	Sex      string `json:"sex"`
 	Age      int    `json:"age"`
-}
-
-type EventPvtMsg struct {
-	*BaseMessage
-}
-
-func (e EventPvtMsg) Type() EventType {
-	return "message:private"
 }
 
 func (em *BaseMessage) Reply(replyer Replayer, text string) error {
@@ -142,6 +113,14 @@ func all[T any](msgType string, msg []Message) ([]T, int) {
 		}
 	}
 	return data, len(data)
+}
+
+type EventPvtMsg struct {
+	*BaseMessage
+}
+
+func (e EventPvtMsg) Type() EventType {
+	return "message:private"
 }
 
 type EventGrMsg struct {
