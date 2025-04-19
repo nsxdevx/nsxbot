@@ -20,15 +20,16 @@ func main() {
 
 	adminuin, _ := strconv.ParseInt(os.Getenv("ADMIN_UIN"), 10, 64)
 	pvt.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
-		text, err := ctx.Msg.TextFirst()
+		msg := ctx.Msg
+		text, err := msg.TextFirst()
 		if err != nil {
 			slog.Error("Error parsing message", "error", err)
 			return
 		}
 		slog.Info("Private Message", "message", text.Text)
-		ctx.Msg.Reply(ctx.Replayer, text.Text)
-		var msg types.MeaasgeChain
-		ctx.SendPvtMsg(ctx, adminuin, msg.Text("收到回复了吗？").Br().Text("2333333333"))
+		msg.Reply(ctx.Replayer, text.Text)
+		var msgchain types.MeaasgeChain
+		ctx.SendPvtMsg(ctx, adminuin, msgchain.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 
 	// Run
