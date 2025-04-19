@@ -38,4 +38,3 @@ func SetWriter(w io.Writer) {
 		TimeFormat: time.Kitchen,
 	}))
 }
-
