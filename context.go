@@ -14,7 +14,7 @@ type Context[T any] struct {
 	context.Context
 	driver.Emitter
 
-	types.Replayer
+	Replayer types.Replayer
 	Time     int64
 	SelfId   int64
 	index    int8

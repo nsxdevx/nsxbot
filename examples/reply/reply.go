@@ -26,10 +26,7 @@ func main() {
 			return
 		}
 		slog.Info("Private Message", "message", text.Text)
-		if err := ctx.Msg.Reply(ctx, text.Text); err != nil {
-			slog.Error("Error replying to message", "error", err)
-			return
-		}
+		ctx.Msg.Reply(ctx.Replayer, text.Text)
 		var msg types.MeaasgeChain
 		ctx.SendPvtMsg(ctx, adminuin, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})

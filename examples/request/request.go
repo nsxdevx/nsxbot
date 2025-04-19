@@ -22,7 +22,7 @@ func main() {
 	req.Handle(func(ctx *nsxbot.Context[types.EventFriendReq]) {
 		if ctx.Msg.UserId == adminuin {
 			slog.Info("Friend Request", "user", ctx.Msg.UserId, "comment", ctx.Msg.Comment)
-			ctx.Msg.Reply(ctx, true, "admin")
+			ctx.Msg.Reply(ctx.Replayer, true, "admin")
 		}
 
 	})
