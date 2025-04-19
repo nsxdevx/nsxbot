@@ -1,7 +1,5 @@
 package types
 
-import "encoding/json"
-
 type EventFriendReq struct {
 	UserId  int64  `json:"user_id"`
 	Comment string `json:"comment"`
@@ -16,12 +14,9 @@ func (fr *EventFriendReq) Reply(replyer Replayer, approve bool, remark string) e
 	if replyer == nil {
 		return ErrNoAvailable
 	}
-	data, err := json.Marshal(struct {
+	data := struct {
 		Approve bool   `json:"approve"`
 		Remark  string `json:"remark"`
-	}{Approve: approve, Remark: remark})
-	if err != nil {
-		return err
-	}
+	}{Approve: approve, Remark: remark}
 	return replyer.Reply(data)
 }

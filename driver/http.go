@@ -79,7 +79,7 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		}
 		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-			event.Replyer = &types.HttpReplyer{
+			event.Replyer = &HttpReplyer{
 				Ctx:    ctx,
 				Writer: w,
 				Cancel: cancel,

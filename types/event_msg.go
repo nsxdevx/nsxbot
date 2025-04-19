@@ -67,12 +67,9 @@ func (em *BaseMessage) Reply(replyer Replayer, text string) error {
 	if replyer == nil {
 		return ErrNoAvailable
 	}
-	data, err := json.Marshal(struct {
+	data := struct {
 		Reply string `json:"reply"`
-	}{Reply: text})
-	if err != nil {
-		return err
-	}
+	}{Reply: text}
 	return replyer.Reply(data)
 }
 
