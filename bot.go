@@ -78,6 +78,8 @@ func OnEvent[T types.Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler.root = eventHandler
 	eventHandler.log = engine.log
 
+	eventHandler.Use(Recovery[T]())
+
 	var eventer T
 	engine.consumers[eventer.Type()] = eventHandler
 	return eventHandler
@@ -152,7 +154,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 		case <-ctx.Done():
 			return
 		case event := <-task:
-			e.log.Debug("Received", "event", event.Types, "time", event.Time, "selfID", event.SelfID)
+			e.log.Debug("Received", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
 					if selfIds, ok := consumer.selfs(); ok && !slices.Contains(selfIds, event.SelfID) {
