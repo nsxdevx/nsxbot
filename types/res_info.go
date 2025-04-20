@@ -16,3 +16,9 @@ type Status struct {
 	Online bool `json:"online"`
 	Good   bool `json:"good"`
 }
+
+type VersionInfo struct {
+	AppName         string `json:"app_name"`
+	ProtocolVersion string `json:"protocol_version"`
+	AppVersion      string `json:"app_version"`
+}

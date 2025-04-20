@@ -133,6 +133,7 @@ func (l *ListenerHttp) auth(w http.ResponseWriter, r *http.Request) ([]byte, err
 
 type EmitterMuxHttp struct {
 	emitters map[int64]Emitter
+	log      *slog.Logger
 }
 
 func NewEmitterMuxHttpSets(emitterhttps ...*EmitterHttp) *EmitterMuxHttp {
@@ -146,6 +147,7 @@ func NewEmitterMuxHttpSets(emitterhttps ...*EmitterHttp) *EmitterMuxHttp {
 	}
 	return &EmitterMuxHttp{
 		emitters: emitters,
+		log:      nlog.Logger(),
 	}
 }
 
@@ -161,10 +163,17 @@ func NewEmitterMuxHttp(urls ...string) *EmitterMuxHttp {
 	}
 	return &EmitterMuxHttp{
 		emitters: emitters,
+		log:      nlog.Logger(),
 	}
 }
 
 func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
+	info, err := emitter.GetVersionInfo(context.Background())
+	if err != nil {
+		m.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
+	} else {
+		m.log.Info("NewEmitterHttp", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
+	}
 	m.emitters[selfId] = emitter
 }
 
@@ -275,7 +284,11 @@ func (e *EmitterHttp) GetStrangerInfo(ctx context.Context, userId int64, noCache
 }
 
 func (e *EmitterHttp) GetStatus(ctx context.Context) (*types.Status, error) {
-	return httpAction[any, types.Status](ctx, e.client, e.token, e.url, Action_GET_STATUS, nil)
+	return httpAction[any, types.Status](ctx, e.client, e.token, e.url, ACTION_GET_STATUS, nil)
+}
+
+func (e *EmitterHttp) GetVersionInfo(ctx context.Context) (*types.VersionInfo, error) {
+	return httpAction[any, types.VersionInfo](ctx, e.client, e.token, e.url, ACTION_GET_VERSION_INFO, nil)
 }
 
 func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {

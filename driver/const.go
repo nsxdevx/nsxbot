@@ -9,5 +9,6 @@ const (
 	ACTION_DELETE_MSG        = "delete_msg"
 	ACTION_GET_LOGIN_INFO    = "get_login_info"
 	ACTION_GET_STRANGER_INFO = "get_stranger_info"
-	Action_GET_STATUS        = "get_status"
+	ACTION_GET_STATUS        = "get_status"
+	ACTION_GET_VERSION_INFO  = "get_version_info"
 )

@@ -34,6 +34,7 @@ func NewWSClient(nodes ...WSnode) *WSClient {
 	return &WSClient{
 		WSEmittersMux: &WSEmittersMux{
 			emitters: make(map[int64]Emitter),
+			log:      nlog.Logger(),
 		},
 		echo:  make(chan Response[json.RawMessage], 100),
 		nodes: nodes,
@@ -71,23 +72,24 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 							ws.log.Error("Read", "err", err)
 							break
 						}
-						if gjson.Get(string(content), "echo").Exists() {
-							var echo Response[json.RawMessage]
-							if err := json.Unmarshal(content, &echo); err != nil {
-								ws.log.Error("Invalid echo", "err", err)
-								continue
+						go func() {
+							if gjson.Get(string(content), "echo").Exists() {
+								var echo Response[json.RawMessage]
+								if err := json.Unmarshal(content, &echo); err != nil {
+									ws.log.Error("Invalid echo", "err", err)
+								}
+								ws.echo <- echo
+								return
 							}
-							ws.echo <- echo
-							continue
-						}
-						event, err := contentToEvent(content)
-						if err != nil {
-							ws.log.Error("Invalid event", "err", err)
-							continue
-						}
-						selfId = event.SelfID
-						ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
-						eventChan <- event
+							event, err := contentToEvent(content)
+							if err != nil {
+								ws.log.Error("Invalid event", "err", err)
+								return
+							}
+							selfId = event.SelfID
+							ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
+							eventChan <- event
+						}()
 					}
 				}
 			}
@@ -117,6 +119,7 @@ func NewWSverver(host string, path string, opts ...WServerOption) *WServer {
 	ws := &WServer{
 		WSEmittersMux: &WSEmittersMux{
 			emitters: make(map[int64]Emitter),
+			log:      nlog.Logger(),
 		},
 		echo: make(chan Response[json.RawMessage], 100),
 		url: url.URL{
@@ -158,23 +161,25 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 				ws.log.Error("Read", "err", err)
 				break
 			}
-			if gjson.Get(string(content), "echo").Exists() {
-				var echo Response[json.RawMessage]
-				if err := json.Unmarshal(content, &echo); err != nil {
-					ws.log.Error("Invalid echo", "err", err)
-					continue
+
+			go func() {
+				if gjson.Get(string(content), "echo").Exists() {
+					var echo Response[json.RawMessage]
+					if err := json.Unmarshal(content, &echo); err != nil {
+						ws.log.Error("Invalid echo", "err", err)
+					}
+					ws.echo <- echo
+					return
 				}
-				ws.echo <- echo
-				continue
-			}
-			event, err := contentToEvent(content)
-			if err != nil {
-				ws.log.Error("Invalid event", "err", err)
-				continue
-			}
-			selfId = event.SelfID
-			ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
-			eventChan <- event
+				event, err := contentToEvent(content)
+				if err != nil {
+					ws.log.Error("Invalid event", "err", err)
+					return
+				}
+				selfId = event.SelfID
+				ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
+				eventChan <- event
+			}()
 		}
 	})
 	ws.log.Info("WS listener start... ", "addr", ws.url.Host)
@@ -205,9 +210,23 @@ func (ws *WServer) auth(r *http.Request) error {
 type WSEmittersMux struct {
 	mu       sync.RWMutex
 	emitters map[int64]Emitter
+	log      *slog.Logger
 }
 
 func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
+	ws.mu.RLock()
+	if _, ok := ws.emitters[selfId]; ok {
+		ws.mu.RUnlock()
+		return
+	}
+	ws.mu.RUnlock()
+
+	info, err := emitter.GetVersionInfo(context.Background())
+	if err != nil {
+		ws.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
+	} else {
+		ws.log.Info("NewEmitterHttp", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
+	}
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
@@ -328,13 +347,24 @@ func (e *EmitterWS) GetStrangerInfo(ctx context.Context, userId int64, noCache b
 
 func (e *EmitterWS) GetStatus(ctx context.Context) (*types.Status, error) {
 	e.mu.Lock()
-	echoId, err := wsAction[any](e.conn, Action_GET_STATUS, nil)
+	echoId, err := wsAction[any](e.conn, ACTION_GET_STATUS, nil)
 	if err != nil {
 		e.mu.Unlock()
 		return nil, err
 	}
 	e.mu.Unlock()
 	return wsWait[types.Status](ctx, echoId, e.echo)
+}
+
+func (e *EmitterWS) GetVersionInfo(ctx context.Context) (*types.VersionInfo, error) {
+	e.mu.Lock()
+	echoId, err := wsAction[any](e.conn, ACTION_GET_VERSION_INFO, nil)
+	if err != nil {
+		e.mu.Unlock()
+		return nil, err
+	}
+	e.mu.Unlock()
+	return wsWait[types.VersionInfo](ctx, echoId, e.echo)
 }
 
 func (e *EmitterWS) GetSelfId(ctx context.Context) (int64, error) {
