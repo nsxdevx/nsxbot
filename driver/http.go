@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/atopos31/nsxbot/nlog"
@@ -23,16 +24,9 @@ type DriverHttp struct {
 	*ListenerHttp
 }
 
-func NewDriverHttp(listenAddr string, emitterUrl string) *DriverHttp {
-	mux := NewEmitterMuxHttp()
-	emitter := NewEmitterHttp(emitterUrl)
-	selfId, err := emitter.GetSelfId(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	mux.AddEmitter(selfId, emitter)
+func NewDriverHttp(listenAddr string, emitterUrl ...string) *DriverHttp {
 	return &DriverHttp{
-		EmitterMuxHttp: mux,
+		EmitterMuxHttp: NewEmitterMuxHttp(emitterUrl...),
 		ListenerHttp:   NewListenerHttp(listenAddr),
 	}
 }
@@ -132,6 +126,7 @@ func (l *ListenerHttp) auth(w http.ResponseWriter, r *http.Request) ([]byte, err
 }
 
 type EmitterMuxHttp struct {
+	mu       sync.RWMutex
 	emitters map[int64]Emitter
 	log      *slog.Logger
 }
@@ -152,19 +147,18 @@ func NewEmitterMuxHttpSets(emitterhttps ...*EmitterHttp) *EmitterMuxHttp {
 }
 
 func NewEmitterMuxHttp(urls ...string) *EmitterMuxHttp {
-	emitters := make(map[int64]Emitter, len(urls))
+	mux := NewEmitterMuxHttp()
 	for _, url := range urls {
-		emitter := NewEmitterHttp(url)
-		id, err := emitter.GetSelfId(context.Background())
-		if err != nil {
-			panic(err)
-		}
-		emitters[id] = emitter
+		go func() {
+			emitter := NewEmitterHttp(url)
+			selfId, err := emitter.GetSelfId(context.Background())
+			if err != nil {
+				panic(err)
+			}
+			mux.AddEmitter(selfId, emitter)
+		}()
 	}
-	return &EmitterMuxHttp{
-		emitters: emitters,
-		log:      nlog.Logger(),
-	}
+	return mux
 }
 
 func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
@@ -174,6 +168,8 @@ func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
 	} else {
 		m.log.Info("NewEmitterHttp", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.emitters[selfId] = emitter
 }
 
