@@ -147,7 +147,10 @@ func NewEmitterMuxHttpSets(emitterhttps ...*EmitterHttp) *EmitterMuxHttp {
 }
 
 func NewEmitterMuxHttp(urls ...string) *EmitterMuxHttp {
-	mux := NewEmitterMuxHttp()
+	mux := &EmitterMuxHttp{
+		emitters: make(map[int64]Emitter),
+		log:      nlog.Logger(),
+	}
 	for _, url := range urls {
 		go func() {
 			emitter := NewEmitterHttp(url)
