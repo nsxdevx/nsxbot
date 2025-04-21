@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -331,7 +332,7 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, token st
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, err
 	}
-	if resp.Status == "failed" {
+	if strings.EqualFold("failed", resp.Status) {
 		return nil, fmt.Errorf("action %s failed, rawdata: %s, plase see onebot logs", action, string(body))
 	}
 	return &resp.Data, nil
