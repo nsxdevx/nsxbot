@@ -15,13 +15,14 @@ const abortIndex int8 = math.MaxInt8 >> 1
 type Context[T any] struct {
 	context.Context
 	driver.Emitter
-
 	types.Replyer
-	Time     int64
-	SelfId   int64
+
+	Time   int64
+	SelfId int64
+	Msg    T
+	Log    *slog.Logger
+
 	index    int8
-	Msg      T
-	Log      *slog.Logger
 	handlers HandlersChain[T]
 }
 

@@ -29,14 +29,17 @@ type Composer[T types.Eventer] struct {
 	root     *EventHandler[T]
 }
 
+// Use adds handlers to the Composer.
 func (c *Composer[T]) Use(handlers ...HandlerFunc[T]) {
 	c.handlers = append(c.handlers, handlers...)
 }
 
+// Filit adds filters to the Composer.
 func (c *Composer[T]) Filit(fillers ...filter.Filter[T]) {
 	c.filters = append(c.filters, fillers...)
 }
 
+// Compose creates a new Composer with the given filters.
 func (c *Composer[T]) Compose(fillers ...filter.Filter[T]) *Composer[T] {
 	return &Composer[T]{
 		handlers: c.handlers,
@@ -45,6 +48,7 @@ func (c *Composer[T]) Compose(fillers ...filter.Filter[T]) *Composer[T] {
 	}
 }
 
+// Handle adds a handler to the Composer.
 func (c *Composer[T]) Handle(handler HandlerFunc[T], filters ...filter.Filter[T]) {
 	handlerEnd := HandlerEnd[T]{
 		fillers:  c.combineFilters(filters),

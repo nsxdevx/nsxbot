@@ -11,6 +11,7 @@ type HttpReplyer struct {
 	Cancel context.CancelFunc
 }
 
+// http-post https://github.com/botuniverse/onebot-11/blob/master/communication/http-post.md
 func (r *HttpReplyer) Reply(data any) error {
 	defer r.Cancel()
 	body, err := json.Marshal(data)
@@ -27,6 +28,7 @@ type WSReplyer struct {
 	content []byte
 }
 
+// ws https://github.com/botuniverse/onebot-11/blob/master/api/hidden.md
 func (w *WSReplyer) Reply(data any) error {
 	body := struct {
 		Context   json.RawMessage `json:"context"`
