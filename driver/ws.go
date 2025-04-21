@@ -87,7 +87,13 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 								return
 							}
 							selfId = event.SelfID
-							ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
+							emitter := NewEmitterWS(event.SelfID, c, ws.echo)
+							ws.AddEmitter(selfId, emitter)
+
+							event.Replyer = &WSReplyer{
+								content: content,
+								emitter: emitter,
+							}
 							eventChan <- event
 						}()
 					}
@@ -177,7 +183,13 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 					return
 				}
 				selfId = event.SelfID
-				ws.AddEmitter(selfId, NewEmitterWS(event.SelfID, c, ws.echo))
+				emitter := NewEmitterWS(event.SelfID, c, ws.echo)
+				ws.AddEmitter(selfId, emitter)
+
+				event.Replyer = &WSReplyer{
+					content: content,
+					emitter: emitter,
+				}
 				eventChan <- event
 			}()
 		}
@@ -293,10 +305,10 @@ func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg types.Meaa
 	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
 }
 
-func (e *EmitterWS) DelMsg(ctx context.Context, messageId int) error {
+func (e *EmitterWS) DelMsg(ctx context.Context, msgId int) error {
 	e.mu.Lock()
 	echoId, err := wsAction[any](e.conn, ACTION_DELETE_MSG, types.DelMsgReq{
-		MessageId: messageId,
+		MessageId: msgId,
 	})
 	if err != nil {
 		e.mu.Unlock()
@@ -369,6 +381,54 @@ func (e *EmitterWS) GetVersionInfo(ctx context.Context) (*types.VersionInfo, err
 
 func (e *EmitterWS) GetSelfId(ctx context.Context) (int64, error) {
 	return e.selfId, nil
+}
+
+func (e *EmitterWS) SetFriendAddRequest(ctx context.Context, flag string, approve bool, remark string) error {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_SET_FRIEND_ADD_REQUEST, types.FriendAddReq{
+		Flag:    flag,
+		Approve: approve,
+		Remark:  remark,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return err
+	}
+	e.mu.Unlock()
+	_, err = wsWait[any](ctx, echoId, e.echo)
+	return err
+}
+
+func (e *EmitterWS) SetGroupAddRequest(ctx context.Context, flag string, approve bool, reason string) error {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_SET_GROUP_ADD_REQUEST, types.GroupAddReq{
+		Flag:    flag,
+		Approve: approve,
+		Reason:  reason,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return err
+	}
+	e.mu.Unlock()
+	_, err = wsWait[any](ctx, echoId, e.echo)
+	return err
+}
+
+func (e *EmitterWS) SetGroupSpecialTitle(ctx context.Context, groupId int64, userId int64, specialTitle string, duration int) error {
+	e.mu.Lock()
+	echoId, err := wsAction(e.conn, ACTION_SET_GROUP_SPECIAL_TITLE, types.SpecialTitleReq{
+		GroupId:      groupId,
+		UserId:       userId,
+		SpecialTitle: specialTitle,
+	})
+	if err != nil {
+		e.mu.Unlock()
+		return err
+	}
+	e.mu.Unlock()
+	_, err = wsWait[any](ctx, echoId, e.echo)
+	return err
 }
 
 func (e *EmitterWS) Raw(ctx context.Context, action Action, params any) ([]byte, error) {

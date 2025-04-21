@@ -26,12 +26,15 @@ type Emitter interface {
 	SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error)
 	GetMsg(ctx context.Context, msgId int) (*types.GetMsgRes, error)
-	DelMsg(ctx context.Context, messageId int) error
+	DelMsg(ctx context.Context, msgId int) error
 	GetLoginInfo(ctx context.Context) (*types.LoginInfo, error)
 	GetStrangerInfo(ctx context.Context, userId int64, noCache bool) (*types.StrangerInfo, error)
 	GetStatus(ctx context.Context) (*types.Status, error)
 	GetVersionInfo(ctx context.Context) (*types.VersionInfo, error)
 	GetSelfId(ctx context.Context) (int64, error)
+	SetFriendAddRequest(ctx context.Context, flag string, approve bool, remark string) error
+	SetGroupAddRequest(ctx context.Context, flag string, approve bool, reason string) error
+	SetGroupSpecialTitle(ctx context.Context, groupId int64, userId int64, specialTitle string, duration int) error
 	Raw(ctx context.Context, action Action, params any) ([]byte, error)
 }
 

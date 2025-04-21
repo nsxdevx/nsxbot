@@ -75,7 +75,6 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			event.Replyer = &HttpReplyer{
-				Ctx:    ctx,
 				Writer: w,
 				Cancel: cancel,
 			}
@@ -304,6 +303,32 @@ func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
 	}
 	e.selfId = &info.UserId
 	return *e.selfId, nil
+}
+
+func (e *EmitterHttp) SetFriendAddRequest(ctx context.Context, flag string, approve bool, remark string) error {
+	_, err := httpAction[types.FriendAddReq, any](ctx, e.client, e.token, e.url, ACTION_SET_FRIEND_ADD_REQUEST, types.FriendAddReq{
+		Flag:    flag,
+		Approve: approve,
+		Remark:  remark,
+	})
+	return err
+}
+
+func (e *EmitterHttp) SetGroupAddRequest(ctx context.Context, flag string, approve bool, reason string) error {
+	_, err := httpAction[types.GroupAddReq, any](ctx, e.client, e.token, e.url, ACTION_SET_GROUP_ADD_REQUEST, types.GroupAddReq{
+		Flag:    flag,
+		Approve: approve,
+		Reason:  reason,
+	})
+	return err
+}
+
+func (e *EmitterHttp) SetGroupSpecialTitle(ctx context.Context, groupId int64, userId int64, specialTitle string, duration int) error {
+	_, err := httpAction[types.SpecialTitleReq, any](ctx, e.client, e.token, e.url, ACTION_SET_GROUP_SPECIAL_TITLE, types.SpecialTitleReq{
+		GroupId: groupId,
+	})
+
+	return err
 }
 
 func httpAction[P any, R any](ctx context.Context, client *http.Client, token string, baseurl string, action string, params P) (*R, error) {

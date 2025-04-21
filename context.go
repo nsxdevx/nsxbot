@@ -16,7 +16,7 @@ type Context[T any] struct {
 	context.Context
 	driver.Emitter
 
-	Replyer  types.Replyer
+	types.Replyer
 	Time     int64
 	SelfId   int64
 	index    int8

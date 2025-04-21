@@ -22,3 +22,22 @@ type GetMsgReq struct {
 type DelMsgReq struct {
 	MessageId int `json:"message_id"`
 }
+
+type FriendAddReq struct {
+	Flag    string `json:"flag"`
+	Remark  string `json:"remark"`
+	Approve bool   `json:"approve"`
+}
+
+type GroupAddReq struct {
+	Flag    string `json:"flag"`
+	SubType string `json:"sub_type"`
+	Approve bool   `json:"approve"`
+	Reason  string `json:"reason"`
+}
+
+type SpecialTitleReq struct {
+	GroupId      int64  `json:"group_id"`
+	UserId       int64  `json:"user_id"`
+	SpecialTitle string `json:"special_title"`
+}
