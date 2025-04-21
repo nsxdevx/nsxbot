@@ -1,9 +1,20 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"io"
+	"log/slog"
+	"net/http"
 	"strings"
+
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/webp"
 )
 
 type Message struct {
@@ -65,6 +76,8 @@ type Reply struct {
 	Id int `json:"id"`
 }
 
+var ErrNetWork = errors.New("network error")
+
 type Image struct {
 	Name       string `json:"name,omitzero"`
 	Summary    string `json:"summary,omitzero"`
@@ -75,4 +88,73 @@ type Image struct {
 	Path       string `json:"path,omitzero"`
 	FileSize   string `json:"file_size,omitzero"`
 	FileUnique string `json:"file_unique,omitzero"`
+	typ        string
+}
+
+// Type returns the image real type.
+func (i *Image) Type() (string, error) {
+	if len(i.typ) > 0 {
+		return i.typ, nil
+	}
+	url := strings.Replace(i.Url, "https://", "http://", 1)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if resp.Body.Close() != nil {
+			slog.Error("failed to close response body", "err", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", ErrNetWork
+	}
+
+	buffer := make([]byte, 16)
+	if _, err := io.ReadFull(resp.Body, buffer); err != nil {
+		return "", err
+	}
+
+	var typ string
+	switch {
+	case bytes.HasPrefix(buffer, []byte{0xFF, 0xD8}):
+		typ = "jpeg"
+	case bytes.HasPrefix(buffer, []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}):
+		typ = "png"
+	case bytes.HasPrefix(buffer, []byte{0x47, 0x49, 0x46, 0x38}):
+		typ = "gif"
+	case bytes.HasPrefix(buffer, []byte{0x42, 0x4D}):
+		typ = "bmp"
+	case len(buffer) >= 12 && bytes.HasPrefix(buffer, []byte{0x52, 0x49, 0x46, 0x46}) && bytes.Equal(buffer[8:12], []byte{0x57, 0x45, 0x42, 0x50}):
+		typ = "webp"
+	default:
+		return "", errors.New("unknown image type")
+	}
+	i.typ = typ
+	return typ, nil
+}
+
+func (i *Image) Decode() (image.Image, error) {
+	url := strings.Replace(i.Url, "https://", "http://", 1)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if resp.Body.Close() != nil {
+			slog.Error("failed to close response body", "err", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, ErrNetWork
+	}
+
+	img, name, err := image.Decode(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	i.typ = name
+	return img, nil
 }

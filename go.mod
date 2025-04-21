@@ -8,6 +8,7 @@ require (
 	github.com/lmittmann/tint v1.0.7
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
+	golang.org/x/image v0.26.0
 )
 
 require (
