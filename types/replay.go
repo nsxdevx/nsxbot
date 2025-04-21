@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	ErrNoAvailable = errors.New("no replayer available")
+	ErrNoAvailable = errors.New("no Replyer available")
 )
 
-type Replayer interface {
+type Replyer interface {
 	Reply(data any) error
 }

@@ -14,7 +14,7 @@ type Event struct {
 	Time    int64
 	SelfID  int64
 	RawData []byte
-	Replyer Replayer
+	Replyer Replyer
 }
 
 type Eventer interface {

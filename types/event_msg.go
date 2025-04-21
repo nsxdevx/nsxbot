@@ -34,7 +34,7 @@ type Sender struct {
 	Age      int    `json:"age"`
 }
 
-func (em *BaseMessage) Reply(replyer Replayer, text string) error {
+func (em *BaseMessage) Reply(replyer Replyer, text string) error {
 	if replyer == nil {
 		return ErrNoAvailable
 	}

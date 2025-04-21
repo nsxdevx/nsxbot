@@ -22,14 +22,14 @@ func main() {
 	req.Handle(func(ctx *nsxbot.Context[types.EventFriendReq]) {
 		if ctx.Msg.UserId == adminuin {
 			slog.Info("Friend Request", "user", ctx.Msg.UserId, "comment", ctx.Msg.Comment)
-			ctx.Msg.Reply(ctx.Replayer, true, "admin")
+			ctx.Msg.Reply(ctx.Replyer, true, "admin")
 		}
 	})
 
 	greq := nsxbot.OnEvent[types.EventGroupReq](bot)
 	greq.Handle(func(ctx *nsxbot.Context[types.EventGroupReq]) {
 		slog.Info("Group Request", "user", ctx.Msg.UserId, "comment", ctx.Msg.Comment)
-		ctx.Msg.Reply(ctx.Replayer, false, "不要")
+		ctx.Msg.Reply(ctx.Replyer, false, "不要")
 	})
 
 	// Run

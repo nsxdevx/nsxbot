@@ -27,7 +27,7 @@ func main() {
 			return
 		}
 		ctx.Log.Info("Private Message", "message", text.Text)
-		msg.Reply(ctx.Replayer, text.Text)
+		msg.Reply(ctx.Replyer, text.Text)
 		var msgchain types.MeaasgeChain
 		ctx.SendPvtMsg(ctx, adminuin, msgchain.Text("收到回复了吗？").Br().Text("2333333333"))
 	})

@@ -10,7 +10,7 @@ func (fr EventFriendReq) Type() EventType {
 	return "request:friend"
 }
 
-func (fr *EventFriendReq) Reply(replyer Replayer, approve bool, remark string) error {
+func (fr *EventFriendReq) Reply(replyer Replyer, approve bool, remark string) error {
 	if replyer == nil {
 		return ErrNoAvailable
 	}
@@ -33,7 +33,7 @@ func (gr EventGroupReq) Type() EventType {
 	return "request:group"
 }
 
-func (gr *EventGroupReq) Reply(replyer Replayer, approve bool, reason string) error {
+func (gr *EventGroupReq) Reply(replyer Replyer, approve bool, reason string) error {
 	if replyer == nil {
 		return ErrNoAvailable
 	}
