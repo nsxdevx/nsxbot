@@ -132,7 +132,7 @@ func (e *Engine) SetConsumerNum(consumerNum int) {
 }
 
 func (e *Engine) debug() {
-	e.log.Info("Engine", "taskLen", e.taskLen, "consumerNum", e.consumerNum)
+	e.log.Info("Engine", "taskLen", e.taskLen, "consumerGoruntineNum", e.consumerNum)
 	e.log.Info("Consumers", "num", len(e.consumers))
 	for t, consumer := range e.consumers {
 		for _, info := range consumer.infos() {
@@ -182,7 +182,7 @@ func (e *Engine) Run(ctx context.Context) {
 		go e.consumerStart(ctx, task)
 	}
 	if nlog.Leveler == slog.LevelDebug {
-		e.log.Warn("Run debug mode, please set env NSX_MODE == release use nlog.SetLevel(slog.LevelInfo) to disable debug mode")
+		e.log.Warn("Run in debug mode, please set env NSX_MODE == release or use nlog.SetLevel(slog.LevelInfo) to disable debug mode.")
 	}
 	if err := e.listener.Listen(ctx, task); err != nil {
 		panic(err)

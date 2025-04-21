@@ -169,7 +169,7 @@ func (m *EmitterMuxHttp) AddEmitter(selfId int64, emitter Emitter) {
 	if err != nil {
 		m.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
 	} else {
-		m.log.Info("NewEmitterHttp", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
+		m.log.Info("NewEmitterHttp", "selfId", selfId, "appName", info.AppName, "protocolVersion", info.ProtocolVersion, "appVersion", info.AppVersion)
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -181,6 +181,8 @@ func (m *EmitterMuxHttp) RemoveEmitter(selfId int64) {
 }
 
 func (m *EmitterMuxHttp) GetEmitter(selfId int64) (Emitter, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	emitter, ok := m.emitters[selfId]
 	if !ok {
 		return nil, fmt.Errorf("emitter not found")
@@ -294,7 +296,7 @@ func (e *EmitterHttp) GetSelfId(ctx context.Context) (int64, error) {
 	if e.selfId != nil {
 		return *e.selfId, nil
 	}
-	e.log.Warn("selfId is nil, try get from GetLoginInfo", "url", e.url)
+	e.log.Warn("SelfId is nil, try get from GetLoginInfo", "url", e.url)
 	info, err := e.GetLoginInfo(ctx)
 	if err != nil {
 		return 0, err
