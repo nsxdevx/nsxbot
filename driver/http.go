@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/atopos31/nsxbot/nlog"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 type DriverHttp struct {

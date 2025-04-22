@@ -1,4 +1,4 @@
-module github.com/atopos31/nsxbot
+module github.com/nsxdevx/nsxbot
 
 go 1.24.1
 

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 type Filter[T any] func(data T) bool

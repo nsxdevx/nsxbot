@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/atopos31/nsxbot/filter"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/filter"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 type FilterChain[T any] []filter.Filter[T]

@@ -6,7 +6,7 @@
 
 [![Go](https://img.shields.io/badge/Go-00ADD8.svg?logo=go&logoColor=white)](https://go.dev/)
 [![Badge](https://img.shields.io/badge/OneBot-11-black)](https://github.com/botuniverse/onebot-11)
-[![License](https://img.shields.io/badge/License-unlicense-green)](https://github.com/atopos31/nsxbot/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-unlicense-green)](https://github.com/nsxdevx/nsxbot/blob/master/LICENSE)
 [![qq group](https://img.shields.io/badge/Group-881412730-red?style=flat-square&logo=tencent-qq)](https://qm.qq.com/cgi-bin/qm/qr?k=d5DcTIKBYVmaHZHZ4BqwKaXop4ePjrh_&jump_from=webapi&authKey=nY7Yhr6GhgbS28XBw0nrH4M3tutmPF9U1+5m7GCaRgaABTqBHkTcHC1l1Sa1NFrh)
 
 </div>
@@ -31,7 +31,7 @@ Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](h
 ### 获取
 
 ```sh
-go get -u github.com/atopos31/nsxbot
+go get -u github.com/nsxdevx/nsxbot
 ```
 > [!IMPORTANT] 
 > 未发布第一版测试，你会拉取到仓库的最新提交，不保证可靠，框架正在开发中......
@@ -46,9 +46,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/atopos31/nsxbot"
-	"github.com/atopos31/nsxbot/driver"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot"
+	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {

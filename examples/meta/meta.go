@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/atopos31/nsxbot"
-	"github.com/atopos31/nsxbot/driver"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot"
+	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/types"
 	"github.com/stretchr/testify/assert"
 )
 

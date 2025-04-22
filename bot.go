@@ -10,9 +10,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/atopos31/nsxbot/driver"
-	"github.com/atopos31/nsxbot/nlog"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 type HandlerEnd[T any] struct {

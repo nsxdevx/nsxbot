@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/atopos31/nsxbot"
-	"github.com/atopos31/nsxbot/driver"
-	"github.com/atopos31/nsxbot/filter"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot"
+	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/filter"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {

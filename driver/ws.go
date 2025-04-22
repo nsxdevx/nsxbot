@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/atopos31/nsxbot/nlog"
-	"github.com/atopos31/nsxbot/types"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/types"
 	"github.com/tidwall/gjson"
 )
 

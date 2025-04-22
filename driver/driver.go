@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/types"
 	"github.com/tidwall/gjson"
 )
 

@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"math"
 
-	"github.com/atopos31/nsxbot/driver"
-	"github.com/atopos31/nsxbot/nlog"
-	"github.com/atopos31/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/types"
 )
 
 const abortIndex int8 = math.MaxInt8 >> 1
