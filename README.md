@@ -1,6 +1,6 @@
 <div align="center">
 
-# Nsxbot Onebot Framework
+# NsxBot OneBot Framework
 
 ![nsxbot](https://socialify.git.ci/atopos31/nsxbot/image?font=Inter&language=1&logo=https%3A%2F%2Fonebot.dev%2Flogo.png&name=1&owner=1&pattern=Circuit+Board&stargazers=1&theme=Auto)
 
@@ -13,7 +13,7 @@
 
 ## 简介
 
-Nsxbot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](https://github.com/botuniverse/onebot-11) 协议的聊天机器人框架。
+NsxBot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](https://github.com/botuniverse/onebot-11) 协议的聊天机器人框架。
 
 提供类似Web框架风格的API，如果你是一个Go Web开发者，那么你可以非常方便的使用Nsxbot。
 
