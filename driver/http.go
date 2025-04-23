@@ -33,13 +33,20 @@ func NewDriverHttp(listenAddr string, emitterUrl ...string) *DriverHttp {
 }
 
 type ListenerHttp struct {
-	mux   *http.ServeMux
-	addr  string
-	token string
-	log   *slog.Logger
+	mux          *http.ServeMux
+	addr         string
+	token        string
+	replyTimeout time.Duration
+	log          *slog.Logger
 }
 
 type ListenerHttpOption func(*ListenerHttp)
+
+func ListenerHttpWithTimeout(timeout time.Duration) ListenerHttpOption {
+	return func(l *ListenerHttp) {
+		l.replyTimeout = timeout
+	}
+}
 
 func ListenerHttpWithToken(token string) ListenerHttpOption {
 	return func(l *ListenerHttp) {
@@ -49,9 +56,10 @@ func ListenerHttpWithToken(token string) ListenerHttpOption {
 
 func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 	ListenerHttp := &ListenerHttp{
-		mux:  http.NewServeMux(),
-		addr: addr,
-		log:  nlog.Logger(),
+		mux:          http.NewServeMux(),
+		addr:         addr,
+		replyTimeout: 1 * time.Second,
+		log:          nlog.Logger(),
 	}
 	for _, opt := range opts {
 		opt(ListenerHttp)
@@ -73,7 +81,7 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event)
 			return
 		}
 		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
-			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), l.replyTimeout)
 			event.Replyer = &HttpReplyer{
 				Writer: w,
 				Cancel: cancel,

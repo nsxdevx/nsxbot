@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 type EventMsg interface {
@@ -123,6 +124,10 @@ func (e EventPvtMsg) Type() EventType {
 	return "message:private"
 }
 
+func (e EventPvtMsg) SessionKey() string {
+	return e.Type() + ":" + fmt.Sprint(e.UserId)
+}
+
 type EventGrMsg struct {
 	*BaseMessage
 	GroupId   int64      `json:"group_id"`
@@ -139,6 +144,10 @@ func (e EventGrMsg) Type() EventType {
 	return "message:group"
 }
 
+func (e EventGrMsg) SessionKey() string {
+	return e.Type() + ":" + fmt.Sprint(e.GroupId) + ":" + fmt.Sprint(e.UserId)
+}
+
 type EventAllMsg struct {
 	*BaseMessage
 	GroupId   int64      `json:"group_id"`
@@ -147,4 +156,8 @@ type EventAllMsg struct {
 
 func (em EventAllMsg) Type() EventType {
 	return "message"
+}
+
+func (em EventAllMsg) SessionKey() string {
+	return em.Type() + ":" + fmt.Sprint(em.GroupId) + ":" + fmt.Sprint(em.UserId)
 }
