@@ -140,7 +140,9 @@ func (e EventGrMsg) Type() EventType {
 }
 
 type EventAllMsg struct {
-	*EventGrMsg
+	*BaseMessage
+	GroupId   int64      `json:"group_id"`
+	Anonymous *Anonymous `json:"anonymous"`
 }
 
 func (em EventAllMsg) Type() EventType {
