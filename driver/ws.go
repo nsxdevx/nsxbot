@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -86,13 +87,15 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 								ws.log.Error("Invalid event", "err", err)
 								return
 							}
-							selfId = event.SelfID
-							emitter := NewEmitterWS(event.SelfID, c, ws.echo)
+							selfId = event.SelfId
+							emitter := NewEmitterWS(event.SelfId, c, ws.echo)
 							ws.AddEmitter(selfId, emitter)
 
-							event.Replyer = &WSReplyer{
-								content: content,
-								emitter: emitter,
+							if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
+								event.Replyer = &WSReplyer{
+									content: content,
+									emitter: emitter,
+								}
 							}
 							eventChan <- event
 						}()
@@ -182,13 +185,14 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 					ws.log.Error("Invalid event", "err", err)
 					return
 				}
-				selfId = event.SelfID
-				emitter := NewEmitterWS(event.SelfID, c, ws.echo)
+				selfId = event.SelfId
+				emitter := NewEmitterWS(event.SelfId, c, ws.echo)
 				ws.AddEmitter(selfId, emitter)
-
-				event.Replyer = &WSReplyer{
-					content: content,
-					emitter: emitter,
+				if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
+					event.Replyer = &WSReplyer{
+						content: content,
+						emitter: emitter,
+					}
 				}
 				eventChan <- event
 			}()

@@ -49,7 +49,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
 	}
-	h.log.Debug("Consumed", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
+	h.log.Debug("Consumed", "types", event.Types, "time", event.Time, "selfId", event.SelfId)
 	for _, handlerEnd := range h.handlerEnds {
 		go func() {
 			for _, filter := range handlerEnd.fillers {
@@ -57,8 +57,8 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
-			h.log.Debug("Handled", "types", event.Types, "time", event.Time, "selfID", event.SelfID, "fillter", handlerEnd.fillers.debug())
-			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfID, msg, event.Replyer)
+			h.log.Debug("Handled", "types", event.Types, "time", event.Time, "selfId", event.SelfId, "fillter", handlerEnd.fillers.debug())
+			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfId, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()
 		}()
@@ -154,13 +154,13 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 		case <-ctx.Done():
 			return
 		case event := <-task:
-			e.log.Debug("Received", "types", event.Types, "time", event.Time, "selfID", event.SelfID)
+			e.log.Debug("Received", "types", event.Types, "time", event.Time, "selfId", event.SelfId)
 			for _, Type := range event.Types {
 				if consumer, ok := e.consumers[Type]; ok {
-					if selfIds, ok := consumer.selfs(); ok && !slices.Contains(selfIds, event.SelfID) {
+					if selfIds, ok := consumer.selfs(); ok && !slices.Contains(selfIds, event.SelfId) {
 						continue
 					}
-					emitter, err := e.emitterMux.GetEmitter(event.SelfID)
+					emitter, err := e.emitterMux.GetEmitter(event.SelfId)
 					if err != nil {
 						e.log.Error("GetEmitter error", "error", err)
 						continue

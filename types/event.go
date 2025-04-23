@@ -12,7 +12,7 @@ const (
 type Event struct {
 	Types   []EventType
 	Time    int64
-	SelfID  int64
+	SelfId  int64
 	RawData []byte
 	Replyer Replyer
 }
