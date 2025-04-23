@@ -182,7 +182,7 @@ func (e *Engine) Run(ctx context.Context) {
 		go e.consumerStart(ctx, task)
 	}
 	if nlog.Leveler == slog.LevelDebug {
-		e.log.Warn("Run in debug mode, please set env NSX_MODE == release or use nlog.SetLevel(slog.LevelInfo) to disable debug mode.")
+		e.log.Warn("Run in debug mode, please set env NSX_MODE=release or nlog.SetLevel(slog.LevelInfo) to disable debug mode.")
 	}
 	if err := e.listener.Listen(ctx, task); err != nil {
 		panic(err)

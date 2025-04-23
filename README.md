@@ -52,9 +52,9 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
+	driver := driver.NewDriverHttp(":8080", "http://localhost:4000")
+
+	bot := nsxbot.Default(driver)
 
 	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
 
@@ -69,9 +69,11 @@ func main() {
 		ctx.Log.Info("Private Message", "message", text.Text)
 		msg.Reply(ctx, text.Text)
 		var msgchain types.MeaasgeChain
-		ctx.SendPvtMsg(ctx, adminuin, msgchain.Text("收到回复了吗？").Br().Text("2333333333"))
+		ctx.SendPvtMsg(ctx, adminuin, msgchain.Text("收到回复了吗？").Br().Face("4"))
 	})
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	// Run
 	bot.Run(ctx)
 }
