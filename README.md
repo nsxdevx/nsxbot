@@ -42,7 +42,6 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"strconv"
 
@@ -63,7 +62,7 @@ func main() {
 		msg := ctx.Msg
 		text, err := msg.TextFirst()
 		if err != nil {
-			slog.Error("Error parsing message", "error", err)
+			ctx.Log.Error("Error parsing message", "error", err)
 			return
 		}
 		ctx.Log.Info("Private Message", "message", text.Text)
