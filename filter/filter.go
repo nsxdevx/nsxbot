@@ -65,3 +65,14 @@ func OnCommand[T types.EventMsg](prefix string, commands ...string) Filter[T] {
 		return false
 	}
 }
+
+func NoCommand[T types.EventMsg](prefix string) Filter[T] {
+	return func(msg T) bool {
+		text, err := msg.TextFirst()
+		if err != nil {
+			return true
+		}
+		_, err = text.Cmd(prefix)
+		return err != nil
+	}
+}
