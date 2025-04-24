@@ -243,7 +243,7 @@ func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
 	if err != nil {
 		ws.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
 	} else {
-		ws.log.Info("NewEmitterHttp", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
+		ws.log.Info("NewEmitterWS", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
 	}
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
