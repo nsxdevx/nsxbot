@@ -26,27 +26,29 @@ type WSnode struct {
 
 type WSClient struct {
 	*WSEmittersMux
-	echo  chan Response[json.RawMessage]
-	nodes []WSnode
-	log   *slog.Logger
+	echo       chan Response[json.RawMessage]
+	nodes      []WSnode
+	log        *slog.Logger
+	retryDelay time.Duration
 }
 
-func NewWSClient(nodes ...WSnode) *WSClient {
+func NewWSClient(retryDelay time.Duration, nodes ...WSnode) *WSClient {
 	return &WSClient{
 		WSEmittersMux: &WSEmittersMux{
 			emitters: make(map[int64]Emitter),
 			log:      nlog.Logger(),
 		},
-		echo:  make(chan Response[json.RawMessage], 100),
-		nodes: nodes,
-		log:   nlog.Logger(),
+		echo:       make(chan Response[json.RawMessage], 100),
+		nodes:      nodes,
+		log:        nlog.Logger(),
+		retryDelay: retryDelay,
 	}
 }
 
 func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) error {
 	for _, node := range ws.nodes {
 		go func(ctx context.Context) {
-			ticker := time.NewTicker(3 * time.Second)
+			ticker := time.NewTicker(ws.retryDelay)
 			url := "ws://" + node.Url
 			for {
 				select {
