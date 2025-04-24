@@ -66,7 +66,6 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 						}
 					}()
 					var selfId int64
-					defer ws.RemoveEmitter(selfId)
 					for {
 						_, content, err := c.ReadMessage()
 						if err != nil {
@@ -100,6 +99,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 							eventChan <- event
 						}()
 					}
+					ws.RemoveEmitter(selfId)
 				}
 			}
 		}(ctx)
