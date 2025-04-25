@@ -91,7 +91,7 @@ type Image struct {
 	typ        string
 }
 
-// In Go 1.22 RSA key exchange based cipher suites were 
+// In Go 1.22 RSA key exchange based cipher suites were
 // removed from the default list, but can be re-added with the
 // GODEBUG setting tlsrsakex=1 or use ToHttp to get qq image Type() or Decode()
 func (i *Image) ToHttp() {
