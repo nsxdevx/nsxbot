@@ -79,6 +79,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 								var echo Response[json.RawMessage]
 								if err := json.Unmarshal(content, &echo); err != nil {
 									ws.log.Error("Invalid echo", "err", err)
+									return
 								}
 								ws.echo <- echo
 								return
@@ -178,6 +179,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 					var echo Response[json.RawMessage]
 					if err := json.Unmarshal(content, &echo); err != nil {
 						ws.log.Error("Invalid echo", "err", err)
+						return
 					}
 					ws.echo <- echo
 					return
