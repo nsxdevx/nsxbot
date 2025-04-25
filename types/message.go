@@ -91,13 +91,19 @@ type Image struct {
 	typ        string
 }
 
-// Type returns the image real type.
+// In Go 1.22 RSA key exchange based cipher suites were 
+// removed from the default list, but can be re-added with the
+// GODEBUG setting tlsrsakex=1 or use ToHttp to get qq image Type() or Decode()
+func (i *Image) ToHttp() {
+	i.Url = strings.Replace(i.Url, "https", "http", 1)
+}
+
+// Type returns the image real type.! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
 func (i *Image) Type() (string, error) {
 	if len(i.typ) > 0 {
 		return i.typ, nil
 	}
-	url := strings.Replace(i.Url, "https://", "http://", 1)
-	resp, err := http.Get(url)
+	resp, err := http.Get(i.Url)
 	if err != nil {
 		return "", err
 	}
@@ -135,9 +141,9 @@ func (i *Image) Type() (string, error) {
 	return typ, nil
 }
 
+// Decode to image.Image ! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
 func (i *Image) Decode() (image.Image, error) {
-	url := strings.Replace(i.Url, "https://", "http://", 1)
-	resp, err := http.Get(url)
+	resp, err := http.Get(i.Url)
 	if err != nil {
 		return nil, err
 	}
