@@ -4,7 +4,7 @@
 
 ![nsxbot](https://socialify.git.ci/atopos31/nsxbot/image?font=Inter&language=1&logo=https%3A%2F%2Fonebot.dev%2Flogo.png&name=1&owner=1&pattern=Circuit+Board&stargazers=1&theme=Auto)
 
-[![Go](https://img.shields.io/badge/Go-00ADD8.svg?logo=go&logoColor=white)](https://go.dev/)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nsxdevx/nsxbot.svg)](https://pkg.go.dev/github.com/nsxdevx/nsxbot)
 [![Badge](https://img.shields.io/badge/OneBot-11-black)](https://github.com/botuniverse/onebot-11)
 [![License](https://img.shields.io/badge/License-unlicense-green)](https://github.com/nsxdevx/nsxbot/blob/master/LICENSE)
 [![qq group](https://img.shields.io/badge/Group-881412730-red?style=flat-square&logo=tencent-qq)](https://qm.qq.com/cgi-bin/qm/qr?k=d5DcTIKBYVmaHZHZ4BqwKaXop4ePjrh_&jump_from=webapi&authKey=nY7Yhr6GhgbS28XBw0nrH4M3tutmPF9U1+5m7GCaRgaABTqBHkTcHC1l1Sa1NFrh)
