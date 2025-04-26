@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"strconv"
 
@@ -28,14 +27,13 @@ func main() {
 	pvt.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
 		info, err := ctx.GetLoginInfo(ctx)
 		if err != nil {
-			slog.Error("Error getting login info", "error", err)
+			ctx.Log.Error("Error getting login info", "error", err)
 			return
 		}
-		slog.Info("ping!")
+		ctx.Log.Info("ping!")
 		var msg types.MeaasgeChain
 		ctx.SendGrMsg(ctx, groupId, msg.Text("在!这里是:"+info.NickName))
 	}, filter.OnlyGroups(groupId), filter.OnlyGrUsers(adminuin))
-
 	// Run
 	bot.Run(ctx)
 }

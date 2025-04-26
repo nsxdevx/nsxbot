@@ -19,6 +19,38 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+type echoStore struct {
+	mu    sync.RWMutex
+	echos map[int64]chan Response[json.RawMessage]
+}
+
+func (e *echoStore) Receive(selfId int64, data []byte) error {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	echoChan, ok := e.echos[selfId]
+	if !ok {
+		return fmt.Errorf("no echo store for selfId %d", selfId)
+	}
+	var echo Response[json.RawMessage]
+	if err := json.Unmarshal(data, &echo); err != nil {
+		return err
+	}
+	echoChan <- echo
+	return nil
+}
+
+func (e *echoStore) GetEcho(selfId int64) chan Response[json.RawMessage] {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	echoChan, ok := e.echos[selfId]
+	if ok {
+		return echoChan
+	}
+	echoChan = make(chan Response[json.RawMessage], 10)
+	e.echos[selfId] = echoChan
+	return echoChan
+}
+
 type WSnode struct {
 	Url   string
 	Token string
@@ -26,7 +58,7 @@ type WSnode struct {
 
 type WSClient struct {
 	*WSEmittersMux
-	echo       chan Response[json.RawMessage]
+	echoStore  *echoStore
 	nodes      []WSnode
 	log        *slog.Logger
 	retryDelay time.Duration
@@ -38,7 +70,9 @@ func NewWSClient(retryDelay time.Duration, nodes ...WSnode) *WSClient {
 			emitters: make(map[int64]Emitter),
 			log:      nlog.Logger(),
 		},
-		echo:       make(chan Response[json.RawMessage], 100),
+		echoStore: &echoStore{
+			echos: make(map[int64]chan Response[json.RawMessage]),
+		},
 		nodes:      nodes,
 		log:        nlog.Logger(),
 		retryDelay: retryDelay,
@@ -76,12 +110,9 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 						}
 						go func() {
 							if gjson.Get(string(content), "echo").Exists() {
-								var echo Response[json.RawMessage]
-								if err := json.Unmarshal(content, &echo); err != nil {
-									ws.log.Error("Invalid echo", "err", err)
-									return
+								if err := ws.echoStore.Receive(selfId, content); err != nil {
+									ws.log.Error("Receive echo", "err", err)
 								}
-								ws.echo <- echo
 								return
 							}
 							event, err := contentToEvent(content)
@@ -90,7 +121,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 								return
 							}
 							selfId = event.SelfId
-							emitter := NewEmitterWS(event.SelfId, c, ws.echo)
+							emitter := NewEmitterWS(selfId, c, ws.echoStore.GetEcho(selfId))
 							ws.AddEmitter(selfId, emitter)
 
 							if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
@@ -113,10 +144,10 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 
 type WServer struct {
 	*WSEmittersMux
-	echo  chan Response[json.RawMessage]
-	url   url.URL
-	token string
-	log   *slog.Logger
+	echoStore *echoStore
+	url       url.URL
+	token     string
+	log       *slog.Logger
 }
 
 type WServerOption func(*WServer)
@@ -133,7 +164,9 @@ func NewWSverver(host string, path string, opts ...WServerOption) *WServer {
 			emitters: make(map[int64]Emitter),
 			log:      nlog.Logger(),
 		},
-		echo: make(chan Response[json.RawMessage], 100),
+		echoStore: &echoStore{
+			echos: make(map[int64]chan Response[json.RawMessage]),
+		},
 		url: url.URL{
 			Scheme: "ws",
 			Host:   host,
@@ -176,12 +209,9 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 
 			go func() {
 				if gjson.Get(string(content), "echo").Exists() {
-					var echo Response[json.RawMessage]
-					if err := json.Unmarshal(content, &echo); err != nil {
-						ws.log.Error("Invalid echo", "err", err)
-						return
+					if err := ws.echoStore.Receive(selfId, content); err != nil {
+						ws.log.Error("Receive echo", "err", err)
 					}
-					ws.echo <- echo
 					return
 				}
 				event, err := contentToEvent(content)
@@ -190,7 +220,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 					return
 				}
 				selfId = event.SelfId
-				emitter := NewEmitterWS(event.SelfId, c, ws.echo)
+				emitter := NewEmitterWS(selfId, c, ws.echoStore.GetEcho(selfId))
 				ws.AddEmitter(selfId, emitter)
 				if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 					event.Replyer = &WSReplyer{
