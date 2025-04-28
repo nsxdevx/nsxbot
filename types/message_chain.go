@@ -82,3 +82,20 @@ func (m MeaasgeChain) Image(file string) MeaasgeChain {
 		Data: data,
 	})
 }
+
+// such as:
+// network URL: https://www.example.com/image.png
+// local file:///C:\\Users\Richard\Pictures\1.png see rfc 8089
+// base64: base64://9j/4AAQSkZJRgABAQEAAAAAAAD/...
+func (m MeaasgeChain) File(file string) MeaasgeChain {
+	data, err := json.Marshal(BaseFile{
+		File: file,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return m.append(Message{
+		Type: "file",
+		Data: data,
+	})
+}
