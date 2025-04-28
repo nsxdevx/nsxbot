@@ -85,6 +85,10 @@ func (em *BaseMessage) Images() ([]Image, int) {
 	return all[Image]("image", em.Messages)
 }
 
+func (em *BaseMessage) File() (*BaseFile, error) {
+	return first[BaseFile]("file", em.Messages)
+}
+
 var (
 	ErrNotFound = errors.New("not found")
 )
