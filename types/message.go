@@ -78,32 +78,37 @@ type Reply struct {
 
 var ErrNetWork = errors.New("network error")
 
-type Image struct {
-	Name       string `json:"name,omitzero"`
-	Summary    string `json:"summary,omitzero"`
-	File       string `json:"file"` // marketface
-	SubType    string `json:"subtype,omitzero"`
+type BaseFile struct {
+	File string `json:"file"`
+	Url  string `json:"url,omitzero"`
+	Path string `json:"path,omitzero"`
+
 	FileID     string `json:"file_id,omitzero"`
-	Url        string `json:"url,omitzero"`
-	Path       string `json:"path,omitzero"`
 	FileSize   string `json:"file_size,omitzero"`
 	FileUnique string `json:"file_unique,omitzero"`
-	typ        string
+}
+
+type Image struct {
+	BaseFile
+	Name     string `json:"name,omitzero"`
+	Summary  string `json:"summary,omitzero"`
+	SubType  string `json:"subtype,omitzero"`
+	realType string
 }
 
 // In Go 1.22 RSA key exchange based cipher suites were
 // removed from the default list, but can be re-added with the
-// GODEBUG setting tlsrsakex=1 or use ToHttp to get qq image Type() or Decode()
-func (i *Image) ToHttp() {
-	i.Url = strings.Replace(i.Url, "https", "http", 1)
-}
-
+// GODEBUG setting tlsrsakex=1 or use noTls to get qq image Type() or Decode()
 // Type returns the image real type.! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
-func (i *Image) Type() (string, error) {
-	if len(i.typ) > 0 {
-		return i.typ, nil
+func (i *Image) RealType(noTls bool) (string, error) {
+	if len(i.realType) > 0 {
+		return i.realType, nil
 	}
-	resp, err := http.Get(i.Url)
+	url := i.Url
+	if noTls {
+		url = strings.Replace(i.Url, "https://", "http://", 1)
+	}
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -137,13 +142,20 @@ func (i *Image) Type() (string, error) {
 	default:
 		return "", errors.New("unknown image type")
 	}
-	i.typ = typ
+	i.realType = typ
 	return typ, nil
 }
 
+// In Go 1.22 RSA key exchange based cipher suites were
+// removed from the default list, but can be re-added with the
+// GODEBUG setting tlsrsakex=1 or use noTls to get qq image Type() or Decode()
 // Decode to image.Image ! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
-func (i *Image) Decode() (image.Image, error) {
-	resp, err := http.Get(i.Url)
+func (i *Image) Decode(noTls bool) (image.Image, error) {
+	url := i.Url
+	if noTls {
+		url = strings.Replace(i.Url, "https://", "http://", 1)
+	}
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +173,6 @@ func (i *Image) Decode() (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	i.typ = name
+	i.realType = name
 	return img, nil
 }

@@ -66,10 +66,10 @@ func (en EventAdmin) Type() EventType {
 type EventGrFile struct {
 	GroupId int64 `json:"group_id"`
 	UserId  int64 `json:"user_id"`
-	File    File  `json:"file"`
+	File    GrFile  `json:"file"`
 }
 
-type File struct {
+type GrFile struct {
 	Id    string `json:"id"`
 	Name  string `json:"name"`
 	Size  int64  `json:"size"`

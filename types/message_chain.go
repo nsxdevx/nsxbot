@@ -70,7 +70,9 @@ func (m MeaasgeChain) Reply(id int) MeaasgeChain {
 // base64: base64://9j/4AAQSkZJRgABAQEAAAAAAAD/...
 func (m MeaasgeChain) Image(file string) MeaasgeChain {
 	data, err := json.Marshal(Image{
-		File: file,
+		BaseFile: BaseFile{
+			File: file,
+		},
 	})
 	if err != nil {
 		panic(err)
