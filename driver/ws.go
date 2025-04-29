@@ -101,7 +101,8 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 							ws.log.Error("Close", "err", err)
 						}
 					}()
-					var selfId int64
+					// connSelfId only be use in meta_event and echoStore
+					var connSelfId int64
 					for {
 						_, content, err := c.ReadMessage()
 						if err != nil {
@@ -110,19 +111,24 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 						}
 						go func() {
 							if gjson.Get(string(content), "echo").Exists() {
-								if err := ws.echoStore.Receive(selfId, content); err != nil {
+								if err := ws.echoStore.Receive(connSelfId, content); err != nil {
 									ws.log.Error("Receive echo", "err", err)
 								}
 								return
 							}
+
 							event, err := contentToEvent(content)
 							if err != nil {
 								ws.log.Error("Invalid event", "err", err)
 								return
 							}
-							selfId = event.SelfId
-							emitter := NewEmitterWS(selfId, c, ws.echoStore.GetEcho(selfId))
-							ws.AddEmitter(selfId, emitter)
+
+							emitter := NewEmitterWS(event.SelfId, c, ws.echoStore.GetEcho(event.SelfId))
+
+							if slices.Contains(event.Types, types.POST_TYPE_META_ENEVT) {
+								connSelfId = event.SelfId
+								ws.AddEmitter(connSelfId, emitter)
+							}
 
 							if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 								event.Replyer = &WSReplyer{
@@ -133,7 +139,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 							eventChan <- event
 						}()
 					}
-					ws.RemoveEmitter(selfId)
+					ws.RemoveEmitter(connSelfId)
 				}
 			}
 		}(ctx)
@@ -198,8 +204,9 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 				ws.log.Error("Close", "err", err)
 			}
 		}()
-		var selfId int64
-		defer ws.RemoveEmitter(selfId)
+		// connSelfId only be use in meta_event and echoStore
+		var connSelfId int64
+		defer ws.RemoveEmitter(connSelfId)
 		for {
 			_, content, err := c.ReadMessage()
 			if err != nil {
@@ -209,19 +216,25 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 
 			go func() {
 				if gjson.Get(string(content), "echo").Exists() {
-					if err := ws.echoStore.Receive(selfId, content); err != nil {
+					if err := ws.echoStore.Receive(connSelfId, content); err != nil {
 						ws.log.Error("Receive echo", "err", err)
 					}
 					return
 				}
+
 				event, err := contentToEvent(content)
 				if err != nil {
 					ws.log.Error("Invalid event", "err", err)
 					return
 				}
-				selfId = event.SelfId
-				emitter := NewEmitterWS(selfId, c, ws.echoStore.GetEcho(selfId))
-				ws.AddEmitter(selfId, emitter)
+
+				emitter := NewEmitterWS(event.SelfId, c, ws.echoStore.GetEcho(event.SelfId))
+
+				if slices.Contains(event.Types, types.POST_TYPE_META_ENEVT) {
+					connSelfId = event.SelfId
+					ws.AddEmitter(connSelfId, emitter)
+				}
+
 				if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
 					event.Replyer = &WSReplyer{
 						content: content,
@@ -264,6 +277,15 @@ type WSEmittersMux struct {
 }
 
 func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
+	info, err := emitter.GetVersionInfo(context.Background())
+	if err != nil {
+		ws.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
+		info = &types.VersionInfo{
+			AppName:         "unknown",
+			ProtocolVersion: "unknown",
+			AppVersion:      "unknown",
+		}
+	}
 	ws.mu.RLock()
 	if _, ok := ws.emitters[selfId]; ok {
 		ws.mu.RUnlock()
@@ -271,12 +293,8 @@ func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
 	}
 	ws.mu.RUnlock()
 
-	info, err := emitter.GetVersionInfo(context.Background())
-	if err != nil {
-		ws.log.Warn("GetVersionInfo error", "error", err, "selfId", selfId)
-	} else {
-		ws.log.Info("NewEmitterWS", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
-	}
+	ws.log.Info("NewEmitterWS", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
+
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
