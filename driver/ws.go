@@ -67,8 +67,9 @@ type WSClient struct {
 func NewWSClient(retryDelay time.Duration, nodes ...WSnode) *WSClient {
 	return &WSClient{
 		WSEmittersMux: &WSEmittersMux{
-			emitters: make(map[int64]Emitter),
-			log:      nlog.Logger(),
+			emitters:         make(map[int64]Emitter),
+			connectCallbacks: make(map[int64]func(Emitter)),
+			log:              nlog.Logger(),
 		},
 		echoStore: &echoStore{
 			echos: make(map[int64]chan Response[json.RawMessage]),
@@ -107,6 +108,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 						_, content, err := c.ReadMessage()
 						if err != nil {
 							ws.log.Error("Read", "err", err)
+							ws.RemoveEmitter(connSelfId)
 							break
 						}
 						go func() {
@@ -139,7 +141,6 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) er
 							eventChan <- event
 						}()
 					}
-					ws.RemoveEmitter(connSelfId)
 				}
 			}
 		}(ctx)
@@ -167,8 +168,9 @@ func WSerevrWithToken(token string) WServerOption {
 func NewWSverver(host string, path string, opts ...WServerOption) *WServer {
 	ws := &WServer{
 		WSEmittersMux: &WSEmittersMux{
-			emitters: make(map[int64]Emitter),
-			log:      nlog.Logger(),
+			emitters:         make(map[int64]Emitter),
+			connectCallbacks: make(map[int64]func(Emitter)),
+			log:              nlog.Logger(),
 		},
 		echoStore: &echoStore{
 			echos: make(map[int64]chan Response[json.RawMessage]),
@@ -206,11 +208,11 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) err
 		}()
 		// connSelfId only be use in meta_event and echoStore
 		var connSelfId int64
-		defer ws.RemoveEmitter(connSelfId)
 		for {
 			_, content, err := c.ReadMessage()
 			if err != nil {
 				ws.log.Error("Read", "err", err)
+				ws.RemoveEmitter(connSelfId)
 				break
 			}
 
@@ -271,9 +273,12 @@ func (ws *WServer) auth(r *http.Request) error {
 }
 
 type WSEmittersMux struct {
-	mu       sync.RWMutex
-	emitters map[int64]Emitter
-	log      *slog.Logger
+	mu               sync.RWMutex
+	callmu           sync.RWMutex
+	emitters         map[int64]Emitter
+	connectCallbacks map[int64]func(Emitter)
+	onClose          func(int64)
+	log              *slog.Logger
 }
 
 func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
@@ -298,12 +303,26 @@ func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
+	go ws.connectCallbacks[selfId](emitter)
+}
+
+func (ws *WSEmittersMux) OnConnect(selfId int64, callback func(Emitter)) {
+	ws.callmu.Lock()
+	defer ws.callmu.Unlock()
+	ws.connectCallbacks[selfId] = callback
 }
 
 func (ws *WSEmittersMux) RemoveEmitter(selfId int64) {
 	ws.mu.Lock()
 	defer ws.mu.Unlock()
 	delete(ws.emitters, selfId)
+	if ws.onClose != nil {
+		go ws.onClose(selfId)
+	}
+}
+
+func (ws *WSEmittersMux) OnClose(callback func(int64)) {
+	ws.onClose = callback
 }
 
 func (ws *WSEmittersMux) GetEmitter(selfId int64) (Emitter, error) {
