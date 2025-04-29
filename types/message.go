@@ -99,7 +99,7 @@ type Image struct {
 // In Go 1.22 RSA key exchange based cipher suites were
 // removed from the default list, but can be re-added with the
 // GODEBUG setting tlsrsakex=1 or use noTls to get qq image Type() or Decode()
-// Type returns the image real type.! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
+// Type returns the image real type.! For qq iamge set GODEBUG setting tlsrsakex=1 or use noTls=true
 func (i *Image) RealType(noTls bool) (string, error) {
 	if len(i.realType) > 0 {
 		return i.realType, nil
@@ -149,7 +149,7 @@ func (i *Image) RealType(noTls bool) (string, error) {
 // In Go 1.22 RSA key exchange based cipher suites were
 // removed from the default list, but can be re-added with the
 // GODEBUG setting tlsrsakex=1 or use noTls to get qq image Type() or Decode()
-// Decode to image.Image ! For qq iamge set GODEBUG setting tlsrsakex=1 or use ToHttp
+// Decode to image.Image ! For qq iamge set GODEBUG setting tlsrsakex=1 or use noTls=true
 func (i *Image) Decode(noTls bool) (image.Image, error) {
 	url := i.Url
 	if noTls {
