@@ -176,3 +176,9 @@ func (i *Image) Decode(noTls bool) (image.Image, error) {
 	i.realType = name
 	return img, nil
 }
+
+type Record struct {
+	BaseFile
+	// The magic field is generally not implemented (even in go-cqhttp) because there is insufficient demand
+	Magic bool `json:"magic"`
+}

@@ -89,6 +89,10 @@ func (em *BaseMessage) File() (*BaseFile, error) {
 	return first[BaseFile]("file", em.Messages)
 }
 
+func (em *BaseMessage) Record() (*Record, error) {
+	return first[Record]("record", em.Messages)
+}
+
 var (
 	ErrNotFound = errors.New("not found")
 )
