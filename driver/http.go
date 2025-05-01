@@ -243,6 +243,7 @@ func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byt
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+e.token)
 	res, err := e.client.Do(req)
 	if err != nil {
 		return nil, err
