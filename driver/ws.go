@@ -301,9 +301,11 @@ func (ws *WSEmittersMux) AddEmitter(selfId int64, emitter Emitter) {
 	ws.log.Info("NewEmitterWS", "selfId", selfId, "AppName", info.AppName, "ProtocolVersion", info.ProtocolVersion, "AppVersion", info.AppVersion)
 
 	ws.mu.Lock()
-	defer ws.mu.Unlock()
 	ws.emitters[selfId] = emitter
-	go ws.connectCallbacks[selfId](emitter)
+	ws.mu.Unlock()
+	if callBack, ok := ws.connectCallbacks[selfId]; ok {
+		go callBack(emitter)
+	}
 }
 
 func (ws *WSEmittersMux) OnConnect(selfId int64, callback func(Emitter)) {
