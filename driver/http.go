@@ -335,6 +335,8 @@ func (e *EmitterHttp) SetGroupAddRequest(ctx context.Context, flag string, appro
 func (e *EmitterHttp) SetGroupSpecialTitle(ctx context.Context, groupId int64, userId int64, specialTitle string, duration int) error {
 	_, err := httpAction[types.SpecialTitleReq, any](ctx, e.client, e.token, e.url, ACTION_SET_GROUP_SPECIAL_TITLE, types.SpecialTitleReq{
 		GroupId: groupId,
+		UserId:  userId,
+		SpecialTitle:   specialTitle,
 	})
 
 	return err
