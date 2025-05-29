@@ -4,7 +4,7 @@ import "encoding/json"
 
 type MeaasgeChain []Message
 
-func (m MeaasgeChain) append(msg Message) MeaasgeChain {
+func (m MeaasgeChain) Append(msg Message) MeaasgeChain {
 	return append(m, msg)
 }
 
@@ -15,7 +15,7 @@ func (m MeaasgeChain) Text(text string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "text",
 		Data: data,
 	})
@@ -32,7 +32,7 @@ func (m MeaasgeChain) Face(id string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "face",
 		Data: data,
 	})
@@ -45,7 +45,7 @@ func (m MeaasgeChain) At(qq string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "at",
 		Data: data,
 	})
@@ -58,7 +58,7 @@ func (m MeaasgeChain) Reply(id int) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "reply",
 		Data: data,
 	})
@@ -77,7 +77,7 @@ func (m MeaasgeChain) Image(file string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "image",
 		Data: data,
 	})
@@ -93,7 +93,7 @@ func (m MeaasgeChain) File(file string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "file",
 		Data: data,
 	})
@@ -106,7 +106,7 @@ func (m MeaasgeChain) Record(file string) MeaasgeChain {
 	if err != nil {
 		panic(err)
 	}
-	return m.append(Message{
+	return m.Append(Message{
 		Type: "record",
 		Data: data,
 	})
