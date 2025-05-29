@@ -32,14 +32,7 @@ type CommonMessage struct {
 	Messages   []schema.Message `json:"message"`
 	RawMessage string           `json:"raw_message"`
 	Font       int              `json:"font"`
-	Sender     Sender           `json:"sender"`
-}
-
-type Sender struct {
-	UserID   int64  `json:"user_id"`
-	Nickname string `json:"nickname"`
-	Sex      string `json:"sex"`
-	Age      int    `json:"age"`
+	Sender     schema.Sender    `json:"sender"`
 }
 
 func (cm CommonMessage) Id() int {

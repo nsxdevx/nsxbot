@@ -121,26 +121,26 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) er
 								return
 							}
 
-							event, err := contentToEvent(content)
+							botevent, err := contentToEvent(content)
 							if err != nil {
 								ws.log.Error("Invalid event", "err", err)
 								return
 							}
 
-							emitter := NewEmitterWS(event.SelfId, c, ws.echoStore.GetEcho(event.SelfId))
+							emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.GetEcho(botevent.SelfId))
 
-							if slices.Contains(event.Types, types.POST_TYPE_META_ENEVT) {
-								connSelfId = event.SelfId
+							if slices.Contains(botevent.Types, event.EVENT_META) {
+								connSelfId = botevent.SelfId
 								ws.AddEmitter(connSelfId, emitter)
 							}
 
-							if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
-								event.Replyer = &WSReplyer{
+							if slices.Contains(botevent.Types, event.EVENT_MESSAGE) || slices.Contains(botevent.Types, event.EVENT_REQUEST) {
+								botevent.Replyer = &WSReplyer{
 									content: content,
 									emitter: emitter,
 								}
 							}
-							eventChan <- event
+							eventChan <- botevent
 						}()
 					}
 				}
@@ -226,26 +226,26 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- event.Event) err
 					return
 				}
 
-				event, err := contentToEvent(content)
+				botevent, err := contentToEvent(content)
 				if err != nil {
 					ws.log.Error("Invalid event", "err", err)
 					return
 				}
 
-				emitter := NewEmitterWS(event.SelfId, c, ws.echoStore.GetEcho(event.SelfId))
+				emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.GetEcho(botevent.SelfId))
 
-				if slices.Contains(event.Types, types.POST_TYPE_META_ENEVT) {
-					connSelfId = event.SelfId
+				if slices.Contains(botevent.Types, event.EVENT_META) {
+					connSelfId = botevent.SelfId
 					ws.AddEmitter(connSelfId, emitter)
 				}
 
-				if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
-					event.Replyer = &WSReplyer{
+				if slices.Contains(botevent.Types, event.EVENT_MESSAGE) || slices.Contains(botevent.Types, event.EVENT_REQUEST) {
+					botevent.Replyer = &WSReplyer{
 						content: content,
 						emitter: emitter,
 					}
 				}
-				eventChan <- event
+				eventChan <- botevent
 			}()
 		}
 	})

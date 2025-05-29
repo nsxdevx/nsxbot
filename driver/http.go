@@ -76,22 +76,22 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- event.Event)
 			l.log.Error("Invalid content", "err", err)
 			return
 		}
-		event, err := contentToEvent(content)
+		botevent, err := contentToEvent(content)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			l.log.Error("Invalid event", "err", err)
 			return
 		}
-		if slices.Contains(event.Types, types.POST_TYPE_MESSAGE) || slices.Contains(event.Types, types.POST_TYPE_REQUEST) {
+		if slices.Contains(botevent.Types, event.EVENT_MESSAGE) || slices.Contains(botevent.Types, event.EVENT_NOTICE) {
 			ctx, cancel := context.WithTimeout(context.Background(), l.replyTimeout)
-			event.Replyer = &HttpReplyer{
+			botevent.Replyer = &HttpReplyer{
 				Writer: w,
 				Cancel: cancel,
 			}
-			eventChan <- event
+			eventChan <- botevent
 			<-ctx.Done()
 		} else {
-			eventChan <- event
+			eventChan <- botevent
 		}
 
 	})
