@@ -14,7 +14,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/schema"
 	"github.com/nsxdevx/nsxbot/types"
 	"github.com/tidwall/gjson"
 )
@@ -80,7 +82,7 @@ func NewWSClient(retryDelay time.Duration, nodes ...WSnode) *WSClient {
 	}
 }
 
-func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- types.Event) error {
+func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) error {
 	for _, node := range ws.nodes {
 		go func(ctx context.Context) {
 			ticker := time.NewTicker(ws.retryDelay)
@@ -188,7 +190,7 @@ func NewWSverver(host string, path string, opts ...WServerOption) *WServer {
 	return ws
 }
 
-func (ws *WServer) Listen(ctx context.Context, eventChan chan<- types.Event) error {
+func (ws *WServer) Listen(ctx context.Context, eventChan chan<- event.Event) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(ws.url.Path, func(w http.ResponseWriter, r *http.Request) {
 		if err := ws.auth(r); err != nil {
@@ -354,7 +356,7 @@ func NewEmitterWS(selfId int64, conn *websocket.Conn, echo chan Response[json.Ra
 	}
 }
 
-func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
 	e.mu.Lock()
 	echoId, err := wsAction(e.conn, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
@@ -368,7 +370,7 @@ func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg types.Meaa
 	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
 }
 
-func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
 	e.mu.Lock()
 	echoId, err := wsAction(e.conn, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
 		GroupId: groupId,

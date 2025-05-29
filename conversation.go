@@ -4,16 +4,16 @@ import (
 	"context"
 	"sync"
 
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 type SessionMsg interface {
-	types.EventMsg
+	event.Messager
 	SessionKey() string
 }
 
-type Sation[T types.EventMsg] struct {
+type Sation[T event.Messager] struct {
 	sessionChan chan *Context[T]
 }
 
@@ -26,7 +26,7 @@ func (s *Sation[T]) Await(ctx context.Context, fillers ...filter.Filter[T]) (*Co
 	}
 }
 
-type SessionStore[T types.EventMsg] struct {
+type SessionStore[T event.Messager] struct {
 	mu       sync.Mutex
 	sessions map[string]*Sation[T]
 }
@@ -52,7 +52,7 @@ func (s *SessionStore[T]) Del(key string) {
 	delete(s.sessions, key)
 }
 
-type SessionHandler[T types.EventMsg] = func(ctx *Context[T], sation *Sation[T])
+type SessionHandler[T event.Messager] = func(ctx *Context[T], sation *Sation[T])
 
 func NewConversation[T SessionMsg](handler SessionHandler[T]) HandlerFunc[T] {
 	store := &SessionStore[T]{

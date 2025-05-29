@@ -6,8 +6,8 @@ import (
 	"math"
 
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/nlog"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 const abortIndex int8 = math.MaxInt8 >> 1
@@ -15,7 +15,7 @@ const abortIndex int8 = math.MaxInt8 >> 1
 type Context[T any] struct {
 	context.Context
 	driver.Emitter
-	types.Replyer
+	event.Replyer
 
 	Time   int64
 	SelfId int64
@@ -26,7 +26,7 @@ type Context[T any] struct {
 	handlers HandlersChain[T]
 }
 
-func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfId int64, time int64, data T, Replyer types.Replyer) Context[T] {
+func NewContext[T any](ctx context.Context, emitter driver.Emitter, selfId int64, time int64, data T, Replyer event.Replyer) Context[T] {
 	return Context[T]{
 		Context: ctx,
 		Emitter: emitter,

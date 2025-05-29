@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/nsxdevx/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,36 +14,36 @@ type MockEventMsg struct {
 	err  error
 }
 
-func (m MockEventMsg) TextFirst() (*types.Text, error) {
-	return &types.Text{Text: m.text}, m.err
+func (m MockEventMsg) TextFirst() (*schema.Text, error) {
+	return &schema.Text{Text: m.text}, m.err
 }
 
-func (m MockEventMsg) AtFirst() (*types.At, error) {
-	return &types.At{}, nil
+func (m MockEventMsg) AtFirst() (*schema.At, error) {
+	return &schema.At{}, nil
 }
 
-func (m MockEventMsg) Ats() ([]types.At, int) {
-	return []types.At{}, 0
+func (m MockEventMsg) Ats() ([]schema.At, int) {
+	return []schema.At{}, 0
 }
 
-func (m MockEventMsg) FaceFirst() (*types.Face, error) {
-	return &types.Face{}, nil
+func (m MockEventMsg) FaceFirst() (*schema.Face, error) {
+	return &schema.Face{}, nil
 }
 
-func (m MockEventMsg) Faces() ([]types.Face, int) {
-	return []types.Face{}, 0
+func (m MockEventMsg) Faces() ([]schema.Face, int) {
+	return []schema.Face{}, 0
 }
 
-func (m MockEventMsg) Texts() ([]types.Text, int) {
-	return []types.Text{}, 0
+func (m MockEventMsg) Texts() ([]schema.Text, int) {
+	return []schema.Text{}, 0
 }
 
-func (m MockEventMsg) ImageFirst() (*types.Image, error) {
-	return &types.Image{}, nil
+func (m MockEventMsg) ImageFirst() (*schema.Image, error) {
+	return &schema.Image{}, nil
 }
 
-func (m MockEventMsg) Images() ([]types.Image, int) {
-	return []types.Image{}, 0
+func (m MockEventMsg) Images() ([]schema.Image, int) {
+	return []schema.Image{}, 0
 }
 
 func (m MockEventMsg) Type() string {

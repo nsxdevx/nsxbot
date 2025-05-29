@@ -6,8 +6,8 @@ import (
 
 	"github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {
@@ -15,10 +15,10 @@ func main() {
 	defer cancel()
 	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
-	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
+	gr := nsxbot.OnEvent[event.GroupMessage](bot)
 
 	gr1 := gr.Compose(filter.OnlyGroups(819085771), filter.OnlyAtUsers("123456789"))
-	gr1.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
+	gr1.Handle(func(ctx *nsxbot.Context[event.GroupMessage]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
 			slog.Error("Error parsing text message", "error", err)
@@ -27,7 +27,7 @@ func main() {
 		slog.Info("Group Message", "message", text.Text)
 	})
 
-	gr1.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
+	gr1.Handle(func(ctx *nsxbot.Context[event.GroupMessage]) {
 		face, err := ctx.Msg.FaceFirst()
 		if err != nil {
 			slog.Error("Error parsing face message", "error", err)
@@ -43,7 +43,7 @@ func main() {
 	bot.Run(ctx)
 }
 
-func ontext(ctx *nsxbot.Context[types.EventGrMsg]) {
+func ontext(ctx *nsxbot.Context[event.GroupMessage]) {
 	text, err := ctx.Msg.TextFirst()
 	if err != nil {
 		slog.Error("Error parsing text message", "error", err)

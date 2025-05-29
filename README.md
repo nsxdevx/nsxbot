@@ -35,7 +35,7 @@ go get -u github.com/nsxdevx/nsxbot
 ```
 
 ### 运行
-回复示例：
+示例：
 ```go
 package main
 
@@ -46,7 +46,8 @@ import (
 
 	"github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
-	"github.com/nsxdevx/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/event"
+	"github.com/nsxdevx/nsxbot/schema"
 )
 
 func main() {
@@ -54,10 +55,10 @@ func main() {
 
 	bot := nsxbot.Default(driver)
 
-	pvt := nsxbot.OnEvent[types.EventPvtMsg](bot)
+	pvt := nsxbot.OnEvent[event.PrivateMessage](bot)
 
 	adminuin, _ := strconv.ParseInt(os.Getenv("ADMIN_UIN"), 10, 64)
-	pvt.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
+	pvt.Handle(func(ctx *nsxbot.Context[event.PrivateMessage]) {
 		msg := ctx.Msg
 		text, err := msg.TextFirst()
 		if err != nil {
@@ -66,7 +67,7 @@ func main() {
 		}
 		ctx.Log.Info("Private Message", "message", text.Text)
 		msg.Reply(ctx, text.Text)
-		var msgchain types.MeaasgeChain
+		var msgchain schema.MeaasgeChain
 		ctx.SendPvtMsg(ctx, adminuin, msgchain.Text("收到回复了吗？").Br().Face("4"))
 	})
 

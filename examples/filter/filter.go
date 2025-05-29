@@ -8,8 +8,8 @@ import (
 
 	"github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {
@@ -17,8 +17,8 @@ func main() {
 	defer cancel()
 	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 	groupId, _ := strconv.ParseInt(os.Getenv("TEST_GROUP"), 10, 64)
-	gr := nsxbot.OnEvent[types.EventGrMsg](bot)
-	gr.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
+	gr := nsxbot.OnEvent[event.GroupMessage](bot)
+	gr.Handle(func(ctx *nsxbot.Context[event.GroupMessage]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
 			slog.Error("Error parsing message", "error", err)

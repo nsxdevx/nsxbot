@@ -1,13 +1,15 @@
 package types
 
+import "github.com/nsxdevx/nsxbot/schema"
+
 type SendPrivateMsgReq struct {
-	UserId  int64     `json:"user_id"`
-	Message []Message `json:"message"`
+	UserId  int64            `json:"user_id"`
+	Message []schema.Message `json:"message"`
 }
 
 type SendGrMsgReq struct {
-	GroupId int64     `json:"group_id"`
-	Message []Message `json:"message"`
+	GroupId int64            `json:"group_id"`
+	Message []schema.Message `json:"message"`
 }
 
 type GetStrangerInfo struct {

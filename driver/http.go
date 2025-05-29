@@ -16,7 +16,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/nlog"
+	"github.com/nsxdevx/nsxbot/schema"
 	"github.com/nsxdevx/nsxbot/types"
 )
 
@@ -67,7 +69,7 @@ func NewListenerHttp(addr string, opts ...ListenerHttpOption) *ListenerHttp {
 	return ListenerHttp
 }
 
-func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- types.Event) error {
+func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- event.Event) error {
 	l.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		content, err := l.auth(w, r)
 		if err != nil {
@@ -255,14 +257,14 @@ func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byt
 	return body, nil
 }
 
-func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
 	})
 }
 
-func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg types.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendGrMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
 		GroupId: groupId,
 		Message: msg,

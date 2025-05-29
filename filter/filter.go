@@ -4,19 +4,19 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/nsxdevx/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/event"
 )
 
 type Filter[T any] func(data T) bool
 
-func OnlyGroups(groups ...int64) Filter[types.EventGrMsg] {
-	return func(data types.EventGrMsg) bool {
+func OnlyGroups(groups ...int64) Filter[event.GroupMessage] {
+	return func(data event.GroupMessage) bool {
 		return slices.Contains(groups, data.GroupId)
 	}
 }
 
-func OnlyAtUsers(userIds ...string) Filter[types.EventGrMsg] {
-	return func(data types.EventGrMsg) bool {
+func OnlyAtUsers(userIds ...string) Filter[event.GroupMessage] {
+	return func(data event.GroupMessage) bool {
 		ats, n := data.Ats()
 		if n == 0 {
 			return false
@@ -30,19 +30,19 @@ func OnlyAtUsers(userIds ...string) Filter[types.EventGrMsg] {
 	}
 }
 
-func OnlyGrUsers(users ...int64) Filter[types.EventGrMsg] {
-	return func(data types.EventGrMsg) bool {
+func OnlyGrUsers(users ...int64) Filter[event.GroupMessage] {
+	return func(data event.GroupMessage) bool {
 		return slices.Contains(users, data.UserId)
 	}
 }
 
-func OnlyUsers(users ...int64) Filter[types.EventPvtMsg] {
-	return func(data types.EventPvtMsg) bool {
+func OnlyUsers(users ...int64) Filter[event.PrivateMessage] {
+	return func(data event.PrivateMessage) bool {
 		return slices.Contains(users, data.UserId)
 	}
 }
 
-func OnCommand[T types.EventMsg](prefix string, commands ...string) Filter[T] {
+func OnCommand[T event.Messager](prefix string, commands ...string) Filter[T] {
 	return func(msg T) bool {
 		text, err := msg.TextFirst()
 		if err != nil {
@@ -66,7 +66,7 @@ func OnCommand[T types.EventMsg](prefix string, commands ...string) Filter[T] {
 	}
 }
 
-func NoCommand[T types.EventMsg](prefix string) Filter[T] {
+func NoCommand[T event.Messager](prefix string) Filter[T] {
 	return func(msg T) bool {
 		text, err := msg.TextFirst()
 		if err != nil {

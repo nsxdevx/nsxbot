@@ -7,8 +7,8 @@ import (
 
 	nsx "github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
-	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/event"
+	"github.com/nsxdevx/nsxbot/schema"
 )
 
 func main() {
@@ -16,9 +16,9 @@ func main() {
 
 	bot := nsx.Default(driver)
 
-	pvt := nsx.OnEvent[types.EventGrMsg](bot)
+	pvt := nsx.OnEvent[event.GroupMessage](bot)
 
-	pvt.Handle(nsx.NewConversation(handler), filter.OnlyGroups(517170497))
+	pvt.Handle(nsx.NewConversation(handler))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -26,7 +26,7 @@ func main() {
 	bot.Run(ctx)
 }
 
-func handler(ctx0 *nsx.Context[types.EventGrMsg], sation *nsx.Sation[types.EventGrMsg]) {
+func handler(ctx0 *nsx.Context[event.GroupMessage], sation *nsx.Sation[event.GroupMessage]) {
 	msg := ctx0.Msg
 	text, err := msg.TextFirst()
 	if err != nil {
@@ -38,7 +38,7 @@ func handler(ctx0 *nsx.Context[types.EventGrMsg], sation *nsx.Sation[types.Event
 		msg.Reply(ctx0, "使用/set 开始设置！")
 		return
 	}
-	var msgchain types.MeaasgeChain
+	var msgchain schema.MeaasgeChain
 	ctx0.SendGrMsg(ctx0, msg.GroupId, msgchain.Text("请选择:").Br().Text("1:test1").Br().Text("2:test2"))
 	//等待下一条消息
 	ctx1, err := sation.Await(ctx0)

@@ -88,6 +88,10 @@ type EventGrBan struct {
 	OperatorId int64  `json:"operator_id"`
 }
 
+func (en EventGrBan) Type() EventType {
+	return "notice:group_ban"
+}
+
 type EventPvtAdd struct {
 	UserId int64 `json:"user_id"`
 }

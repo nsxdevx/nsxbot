@@ -6,8 +6,8 @@ import (
 
 	"github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 func main() {
@@ -15,8 +15,8 @@ func main() {
 	defer cancel()
 	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
-	gr := nsxbot.OnEvent[types.EventPvtMsg](bot)
-	gr.Handle(func(ctx *nsxbot.Context[types.EventPvtMsg]) {
+	gr := nsxbot.OnEvent[event.PrivateMessage](bot)
+	gr.Handle(func(ctx *nsxbot.Context[event.PrivateMessage]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
 			slog.Error("Error parsing message", "error", err)
@@ -42,7 +42,7 @@ func main() {
 			slog.Info("Command key", "value", value)
 		}
 
-	}, filter.OnCommand[types.EventPvtMsg]("/", "echo"))
+	}, filter.OnCommand[event.PrivateMessage]("/", "echo"))
 
 	// Run
 	bot.Run(ctx)

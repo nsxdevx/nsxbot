@@ -7,8 +7,9 @@ import (
 
 	"github.com/nsxdevx/nsxbot"
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
-	"github.com/nsxdevx/nsxbot/types"
+	"github.com/nsxdevx/nsxbot/schema"
 )
 
 func main() {
@@ -22,16 +23,16 @@ func main() {
 
 	bot := nsxbot.Default(driver.NewWSverver(":8081", "/"))
 
-	pvt := nsxbot.OnSelfsEvent[types.EventGrMsg](bot, aili0uin, aili1uin)
+	pvt := nsxbot.OnSelfsEvent[event.GroupMessage](bot, aili0uin, aili1uin)
 
-	pvt.Handle(func(ctx *nsxbot.Context[types.EventGrMsg]) {
+	pvt.Handle(func(ctx *nsxbot.Context[event.GroupMessage]) {
 		info, err := ctx.GetLoginInfo(ctx)
 		if err != nil {
 			ctx.Log.Error("Error getting login info", "error", err)
 			return
 		}
 		ctx.Log.Info("ping!")
-		var msg types.MeaasgeChain
+		var msg schema.MeaasgeChain
 		ctx.SendGrMsg(ctx, groupId, msg.Text("在!这里是:"+info.NickName))
 	}, filter.OnlyGroups(groupId), filter.OnlyGrUsers(adminuin))
 	// Run

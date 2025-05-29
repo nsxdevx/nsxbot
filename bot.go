@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/nsxdevx/nsxbot/driver"
+	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/nlog"
-	"github.com/nsxdevx/nsxbot/types"
 )
 
 type HandlerEnd[T any] struct {
@@ -20,7 +20,7 @@ type HandlerEnd[T any] struct {
 	handlers HandlersChain[T]
 }
 
-type EventHandler[T types.Eventer] struct {
+type EventHandler[T event.Eventer] struct {
 	selfIds []int64
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
@@ -44,7 +44,7 @@ func (h *EventHandler[T]) infos() []string {
 	return infos
 }
 
-func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, event types.Event) error {
+func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, event event.Event) error {
 	var msg T
 	if err := json.Unmarshal(event.RawData, &msg); err != nil {
 		return err
@@ -69,11 +69,11 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 type consumer interface {
 	selfs() ([]int64, bool)
 	infos() []string
-	consume(ctx context.Context, emitter driver.Emitter, event types.Event) error
+	consume(ctx context.Context, emitter driver.Emitter, event event.Event) error
 }
 
 // start handler all self event
-func OnEvent[T types.Eventer](engine *Engine) *EventHandler[T] {
+func OnEvent[T event.Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler := new(EventHandler[T])
 	eventHandler.root = eventHandler
 	eventHandler.log = engine.log
@@ -86,7 +86,7 @@ func OnEvent[T types.Eventer](engine *Engine) *EventHandler[T] {
 }
 
 // start handler evnet by selfIds
-func OnSelfsEvent[T types.Eventer](engine *Engine, selfIds ...int64) *EventHandler[T] {
+func OnSelfsEvent[T event.Eventer](engine *Engine, selfIds ...int64) *EventHandler[T] {
 	eventHandler := OnEvent[T](engine)
 	eventHandler.selfIds = selfIds
 	return eventHandler
@@ -97,7 +97,7 @@ type Engine struct {
 	emitterMux  driver.EmitterMux
 	taskLen     int
 	consumerNum int
-	consumers   map[types.EventType]consumer
+	consumers   map[string]consumer
 	log         *slog.Logger
 }
 
@@ -107,7 +107,7 @@ func Default(driver driver.Driver) *Engine {
 		emitterMux:  driver,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
-		consumers:   make(map[types.EventType]consumer),
+		consumers:   make(map[string]consumer),
 		log:         nlog.Logger(),
 	}
 }
@@ -118,7 +118,7 @@ func New(listener driver.Listener, emitterMux driver.EmitterMux) *Engine {
 		emitterMux:  emitterMux,
 		taskLen:     10,
 		consumerNum: runtime.NumCPU(),
-		consumers:   make(map[types.EventType]consumer),
+		consumers:   make(map[string]consumer),
 		log:         nlog.Logger(),
 	}
 }
@@ -148,7 +148,7 @@ func (e *Engine) debug() {
 	}
 }
 
-func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
+func (e *Engine) consumerStart(ctx context.Context, task <-chan event.Event) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -177,7 +177,7 @@ func (e *Engine) consumerStart(ctx context.Context, task <-chan types.Event) {
 
 func (e *Engine) Run(ctx context.Context) {
 	e.debug()
-	task := make(chan types.Event, e.taskLen)
+	task := make(chan event.Event, e.taskLen)
 	for range e.consumerNum {
 		go e.consumerStart(ctx, task)
 	}
