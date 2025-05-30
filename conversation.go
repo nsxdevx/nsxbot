@@ -17,6 +17,7 @@ type Sation[T event.Messager] struct {
 	sessionChan chan *Context[T]
 }
 
+// Context represents the context of a message in a session.
 func (s *Sation[T]) Await(ctx context.Context, fillers ...filter.Filter[T]) (*Context[T], error) {
 	select {
 	case <-ctx.Done():
@@ -54,6 +55,7 @@ func (s *SessionStore[T]) Del(key string) {
 
 type SessionHandler[T event.Messager] = func(ctx *Context[T], sation *Sation[T])
 
+// Start a conversation session with a handler.
 func NewConversation[T SessionMsg](handler SessionHandler[T]) HandlerFunc[T] {
 	store := &SessionStore[T]{
 		sessions: make(map[string]*Sation[T]),
