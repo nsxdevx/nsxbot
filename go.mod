@@ -18,3 +18,5 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+retract [v0.1.0, v0.1.5] // Not compatible with v0.2.x
