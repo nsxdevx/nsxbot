@@ -90,9 +90,9 @@ type CommonFile struct {
 
 type Image struct {
 	CommonFile
-	Name     string `json:"name,omitzero"`
+	Type     string `json:"type,omitzero"`
 	Summary  string `json:"summary,omitzero"`
-	SubType  string `json:"subtype,omitzero"`
+	SubType  int    `json:"sub_type,omitzero"`
 	realType string
 }
 
