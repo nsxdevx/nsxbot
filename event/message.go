@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/nsxdevx/nsxbot/schema"
+	"iter"
 )
 
 var (
@@ -46,6 +46,30 @@ func (cm CommonMessage) Reply(replyer Replyer, text string) error {
 		Reply string `json:"reply"`
 	}{Reply: text}
 	return replyer.Reply(data)
+}
+
+// yield the rawMessage by type
+func (cm CommonMessage) FliterType(Type string) iter.Seq[json.RawMessage] {
+	return func(yield func(json.RawMessage) bool) {
+		for _, msg := range cm.Messages {
+			if msg.Type == Type {
+				if !yield(msg.Data) {
+					return
+				}
+			}
+		}
+	}
+}
+
+// yield all messages use type and raw
+func (cm CommonMessage) All() iter.Seq2[string, json.RawMessage] {
+	return func(yield func(string, json.RawMessage) bool) {
+		for _, msg := range cm.Messages {
+			if !yield(msg.Type, msg.Data) {
+				return
+			}
+		}
+	}
 }
 
 func (cm CommonMessage) Texts() ([]schema.Text, int) {
