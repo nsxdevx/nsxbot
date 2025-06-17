@@ -1,10 +1,10 @@
 package event
 
 type Notify struct {
-	SubType    string `json:"sub_type"`
-	TargetId   int64  `json:"target_id"`
-	UserId     int64  `json:"user_id"`
-	GroupoupId int64  `json:"group_id"`
+	SubType  string `json:"sub_type"`
+	TargetId int64  `json:"target_id"`
+	UserId   int64  `json:"user_id"`
+	GroupId  int64  `json:"group_id"`
 }
 
 func (en Notify) Type() string {
@@ -12,7 +12,7 @@ func (en Notify) Type() string {
 }
 
 type GroupRecall struct {
-	GroupoupId int64 `json:"group_id"`
+	GroupId    int64 `json:"group_id"`
 	UserId     int64 `json:"user_id"`
 	OperatorId int64 `json:"operator_id"`
 	MessageId  int64 `json:"message_id"`
@@ -33,7 +33,7 @@ func (en PrivateRecall) Type() string {
 
 type GroupDecrease struct {
 	SubType    string `json:"sub_type"` // leave/kick/kick_me
-	GroupoupId int64  `json:"group_id"`
+	GroupId    int64  `json:"group_id"`
 	UserId     int64  `json:"user_id"`
 	OperatorId int64  `json:"operator_id"`
 }
@@ -44,7 +44,7 @@ func (en GroupDecrease) Type() string {
 
 type GroupIncrease struct {
 	SubType    string `json:"sub_type"` // approve/invite
-	GroupoupId int64  `json:"group_id"`
+	GroupId    int64  `json:"group_id"`
 	UserId     int64  `json:"user_id"`
 	OperatorId int64  `json:"operator_id"`
 }
@@ -54,9 +54,9 @@ func (en GroupIncrease) Type() string {
 }
 
 type Admin struct {
-	SubType    string `json:"sub_type"` // set/unset
-	GroupoupId int64  `json:"group_id"`
-	UserId     int64  `json:"user_id"`
+	SubType string `json:"sub_type"` // set/unset
+	GroupId int64  `json:"group_id"`
+	UserId  int64  `json:"user_id"`
 }
 
 func (en Admin) Type() string {
@@ -64,9 +64,9 @@ func (en Admin) Type() string {
 }
 
 type GroupFile struct {
-	GroupoupId int64 `json:"group_id"`
-	UserId     int64 `json:"user_id"`
-	File       File  `json:"file"`
+	GroupId int64 `json:"group_id"`
+	UserId  int64 `json:"user_id"`
+	File    File  `json:"file"`
 }
 
 type File struct {
@@ -82,7 +82,7 @@ func (en GroupFile) Type() string {
 
 type GroupBan struct {
 	SubType    string `json:"sub_type"` // ban/lift_ban
-	GroupoupId int64  `json:"group_id"`
+	GroupId    int64  `json:"group_id"`
 	UserId     int64  `json:"user_id"`
 	Duration   int64  `json:"duration"` // s
 	OperatorId int64  `json:"operator_id"`

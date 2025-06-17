@@ -356,7 +356,7 @@ func NewEmitterWS(selfId int64, conn *websocket.Conn, echo chan Response[json.Ra
 	}
 }
 
-func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg schema.MessageChain) (*types.SendMsgRes, error) {
 	e.mu.Lock()
 	echoId, err := wsAction(e.conn, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
@@ -370,7 +370,7 @@ func (e *EmitterWS) SendPvtMsg(ctx context.Context, userId int64, msg schema.Mea
 	return wsWait[types.SendMsgRes](ctx, echoId, e.echo)
 }
 
-func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterWS) SendGrMsg(ctx context.Context, groupId int64, msg schema.MessageChain) (*types.SendMsgRes, error) {
 	e.mu.Lock()
 	echoId, err := wsAction(e.conn, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
 		GroupId: groupId,
@@ -543,20 +543,20 @@ func wsAction[P any](conn *websocket.Conn, action string, params P) (string, err
 	})
 }
 
-func wsWait[R any](ctx context.Context, echoId string, echocChan chan Response[json.RawMessage]) (*R, error) {
+func wsWait[R any](ctx context.Context, echoId string, echoChan chan Response[json.RawMessage]) (*R, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case echo := <-echocChan:
+		case echo := <-echoChan:
 			if !strings.EqualFold(echoId, echo.Echo) {
-				echocChan <- echo
+				echoChan <- echo
 				continue
 			}
 			if strings.EqualFold("failed", echo.Status) {
-				return nil, fmt.Errorf("action failed, rawdata: %x, plase see onebot logs", echo.Status)
+				return nil, fmt.Errorf("action failed, rawdata: %x, please see onebot logs", echo.Status)
 			}
 			var res R
 			if err := json.Unmarshal(echo.Data, &res); err != nil {

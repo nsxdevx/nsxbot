@@ -2,13 +2,13 @@ package schema
 
 import "encoding/json"
 
-type MeaasgeChain []Message
+type MessageChain []Message
 
-func (m MeaasgeChain) Append(msg Message) MeaasgeChain {
+func (m MessageChain) Append(msg Message) MessageChain {
 	return append(m, msg)
 }
 
-func (m MeaasgeChain) Text(text string) MeaasgeChain {
+func (m MessageChain) Text(text string) MessageChain {
 	data, err := json.Marshal(Text{
 		Text: text,
 	})
@@ -21,11 +21,11 @@ func (m MeaasgeChain) Text(text string) MeaasgeChain {
 	})
 }
 
-func (m MeaasgeChain) Br() MeaasgeChain {
+func (m MessageChain) Br() MessageChain {
 	return m.Text("\n")
 }
 
-func (m MeaasgeChain) Face(id string) MeaasgeChain {
+func (m MessageChain) Face(id string) MessageChain {
 	data, err := json.Marshal(Face{
 		Id: id,
 	})
@@ -38,7 +38,7 @@ func (m MeaasgeChain) Face(id string) MeaasgeChain {
 	})
 }
 
-func (m MeaasgeChain) At(qq string) MeaasgeChain {
+func (m MessageChain) At(qq string) MessageChain {
 	data, err := json.Marshal(At{
 		QQ: qq,
 	})
@@ -51,7 +51,7 @@ func (m MeaasgeChain) At(qq string) MeaasgeChain {
 	})
 }
 
-func (m MeaasgeChain) Reply(id int) MeaasgeChain {
+func (m MessageChain) Reply(id int) MessageChain {
 	data, err := json.Marshal(Reply{
 		Id: id,
 	})
@@ -68,7 +68,7 @@ func (m MeaasgeChain) Reply(id int) MeaasgeChain {
 // network URL: https://www.example.com/image.png
 // local file:///C:\\Users\Richard\Pictures\1.png see rfc 8089
 // base64: base64://9j/4AAQSkZJRgABAQEAAAAAAAD/...
-func (m MeaasgeChain) Image(file string) MeaasgeChain {
+func (m MessageChain) Image(file string) MessageChain {
 	data, err := json.Marshal(Image{
 		CommonFile: CommonFile{
 			File: file,
@@ -86,7 +86,7 @@ func (m MeaasgeChain) Image(file string) MeaasgeChain {
 // such as:
 // network URL: https://www.example.com/image.png
 // local file:///C:\\Users\Richard\Pictures\1.png see rfc 8089
-func (m MeaasgeChain) File(file string) MeaasgeChain {
+func (m MessageChain) File(file string) MessageChain {
 	data, err := json.Marshal(CommonFile{
 		File: file,
 	})
@@ -99,7 +99,7 @@ func (m MeaasgeChain) File(file string) MeaasgeChain {
 	})
 }
 
-func (m MeaasgeChain) Record(file string) MeaasgeChain {
+func (m MessageChain) Record(file string) MessageChain {
 	data, err := json.Marshal(CommonFile{
 		File: file,
 	})

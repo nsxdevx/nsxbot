@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nsxdevx/nsxbot/schema"
 	"iter"
+
+	"github.com/nsxdevx/nsxbot/schema"
 )
 
 var (
@@ -49,7 +50,7 @@ func (cm CommonMessage) Reply(replyer Replyer, text string) error {
 }
 
 // yield the rawMessage by type
-func (cm CommonMessage) FliterType(Type string) iter.Seq[json.RawMessage] {
+func (cm CommonMessage) FilterType(Type string) iter.Seq[json.RawMessage] {
 	return func(yield func(json.RawMessage) bool) {
 		for _, msg := range cm.Messages {
 			if msg.Type == Type {

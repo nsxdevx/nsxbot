@@ -57,7 +57,7 @@ func (h *EventHandler[T]) consume(ctx context.Context, emitter driver.Emitter, e
 					return
 				}
 			}
-			h.log.Debug("Handled", "types", event.Types, "time", event.Time, "selfId", event.SelfId, "fillter", handlerEnd.fillers.debug())
+			h.log.Debug("Handled", "types", event.Types, "time", event.Time, "selfId", event.SelfId, "filter", handlerEnd.fillers.debug())
 			nsxctx := NewContext(ctx, emitter, event.Time, event.SelfId, msg, event.Replyer)
 			nsxctx.handlers = handlerEnd.handlers
 			nsxctx.Next()

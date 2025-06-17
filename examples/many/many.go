@@ -32,7 +32,7 @@ func main() {
 			return
 		}
 		ctx.Log.Info("ping!")
-		var msg schema.MeaasgeChain
+		var msg schema.MessageChain
 		ctx.SendGrMsg(ctx, groupId, msg.Text("在!这里是:"+info.NickName))
 	}, filter.OnlyGroups(groupId), filter.OnlyGrUsers(adminuin))
 	// Run

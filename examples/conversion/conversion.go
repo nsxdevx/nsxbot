@@ -38,7 +38,7 @@ func handler(ctx0 *nsx.Context[event.GroupMessage], sation *nsx.Sation[event.Gro
 		msg.Reply(ctx0, "使用/set 开始设置！")
 		return
 	}
-	var msgchain schema.MeaasgeChain
+	var msgchain schema.MessageChain
 	ctx0.SendGrMsg(ctx0, msg.GroupId, msgchain.Text("请选择:").Br().Text("1:test1").Br().Text("2:test2"))
 	//等待下一条消息
 	ctx1, err := sation.Await(ctx0)

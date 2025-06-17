@@ -27,7 +27,7 @@ func main() {
 			return
 		}
 		slog.Info("Private Message", "message", text.Text)
-		var msg schema.MeaasgeChain
+		var msg schema.MessageChain
 		ctx.SendPvtMsg(ctx, adminuin, msg.Text("收到回复了吗？").Br().Text("2333333333"))
 	})
 

@@ -257,14 +257,14 @@ func (e *EmitterHttp) Raw(ctx context.Context, action Action, params any) ([]byt
 	return body, nil
 }
 
-func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterHttp) SendPvtMsg(ctx context.Context, userId int64, msg schema.MessageChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendPrivateMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_PRIVATE_MSG, types.SendPrivateMsgReq{
 		UserId:  userId,
 		Message: msg,
 	})
 }
 
-func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg schema.MeaasgeChain) (*types.SendMsgRes, error) {
+func (e *EmitterHttp) SendGrMsg(ctx context.Context, groupId int64, msg schema.MessageChain) (*types.SendMsgRes, error) {
 	return httpAction[types.SendGrMsgReq, types.SendMsgRes](ctx, e.client, e.token, e.url, ACTION_SEND_GROUP_MSG, types.SendGrMsgReq{
 		GroupId: groupId,
 		Message: msg,
@@ -371,7 +371,7 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, token st
 		return nil, err
 	}
 	if strings.EqualFold("failed", resp.Status) {
-		return nil, fmt.Errorf("action %s failed, rawdata: %s, plase see onebot logs", action, string(body))
+		return nil, fmt.Errorf("action %s failed, rawdata: %s, please see onebot logs", action, string(body))
 	}
 	return &resp.Data, nil
 }
