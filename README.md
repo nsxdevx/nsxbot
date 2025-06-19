@@ -11,6 +11,8 @@
 
 </div>
 
+> **⚠️ 注意：** 本项目目前处于 v0.x.y 阶段，API 尚不稳定，随时可能发生变更。请勿大规模使用，或锁定到具体的 commit/tag。
+
 ## 简介
 
 NsxBot 是一个使用 [Go](https://go.dev/) 语言编写，基于 [OneBot 11](https://github.com/botuniverse/onebot-11) 协议的聊天机器人框架。
