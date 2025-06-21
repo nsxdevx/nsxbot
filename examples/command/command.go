@@ -35,7 +35,7 @@ func main() {
 		} else {
 			slog.Info("Command index", "arg", arg)
 		}
-		value, err := text.CmdKey("key")
+		value, err := text.CmdValue("key")
 		if err != nil {
 			slog.Error("Error parsing command key", "error", err)
 		} else {

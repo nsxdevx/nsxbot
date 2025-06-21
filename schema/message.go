@@ -26,6 +26,7 @@ type Text struct {
 	Text string `json:"text"`
 }
 
+// return cmd name by prefix
 func (t Text) Cmd(prefix string) (string, error) {
 	trimmed := strings.TrimSpace(t.Text)
 	if !strings.HasPrefix(trimmed, prefix) {
@@ -38,6 +39,7 @@ func (t Text) Cmd(prefix string) (string, error) {
 	return parts[0], nil
 }
 
+// return cmd index value by prefix
 func (t Text) CmdIndex(prefix string, index int) (string, error) {
 	if _, err := t.Cmd(prefix); err != nil {
 		return "", err
@@ -50,10 +52,11 @@ func (t Text) CmdIndex(prefix string, index int) (string, error) {
 	return parts[index+1], nil
 }
 
-func (t Text) CmdKey(key string) (string, error) {
+// return cmd value by key
+func (t Text) CmdValue(key string) (value string, err error) {
 	trimmed := strings.TrimSpace(t.Text)
 	parts := strings.Fields(trimmed)
-	if len(parts) < 3 {
+	if len(parts) <= 2 {
 		return "", errors.New("not enough parts")
 	}
 	for i := 1; i+1 < len(parts); i = i + 2 {
