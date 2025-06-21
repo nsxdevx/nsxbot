@@ -21,6 +21,9 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+// ws onebot await echo message time out
+var EchoTimeOut = 5 * time.Second
+
 type echoStore struct {
 	mu    sync.RWMutex
 	echos map[int64]chan Response[json.RawMessage]
@@ -41,7 +44,7 @@ func (e *echoStore) Receive(selfId int64, data []byte) error {
 	return nil
 }
 
-func (e *echoStore) GetEcho(selfId int64) chan Response[json.RawMessage] {
+func (e *echoStore) Get(selfId int64) chan Response[json.RawMessage] {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	echoChan, ok := e.echos[selfId]
@@ -127,7 +130,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) er
 								return
 							}
 
-							emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.GetEcho(botevent.SelfId))
+							emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.Get(botevent.SelfId))
 
 							if slices.Contains(botevent.Types, event.EVENT_META) {
 								connSelfId = botevent.SelfId
@@ -232,7 +235,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- event.Event) err
 					return
 				}
 
-				emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.GetEcho(botevent.SelfId))
+				emitter := NewEmitterWS(botevent.SelfId, c, ws.echoStore.Get(botevent.SelfId))
 
 				if slices.Contains(botevent.Types, event.EVENT_META) {
 					connSelfId = botevent.SelfId
@@ -518,7 +521,7 @@ func (e *EmitterWS) Raw(ctx context.Context, action Action, params any) ([]byte,
 		return nil, err
 	}
 	e.mu.Unlock()
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, EchoTimeOut)
 	defer cancel()
 	for {
 		select {
@@ -544,7 +547,7 @@ func wsAction[P any](conn *websocket.Conn, action string, params P) (string, err
 }
 
 func wsWait[R any](ctx context.Context, echoId string, echoChan chan Response[json.RawMessage]) (*R, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, EchoTimeOut)
 	defer cancel()
 	for {
 		select {
