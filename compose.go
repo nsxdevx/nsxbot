@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/nsxdevx/nsxbot/event"
 	"github.com/nsxdevx/nsxbot/filter"
 )
 
@@ -23,7 +22,7 @@ type HandlersChain[T any] []HandlerFunc[T]
 
 type HandlerFunc[T any] func(ctx *Context[T])
 
-type Composer[T event.Eventer] struct {
+type Composer[T any] struct {
 	handlers HandlersChain[T]
 	filters  FilterChain[T]
 	root     *EventHandler[T]

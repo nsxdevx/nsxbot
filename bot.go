@@ -20,7 +20,7 @@ type HandlerEnd[T any] struct {
 	handlers HandlersChain[T]
 }
 
-type EventHandler[T event.Eventer] struct {
+type EventHandler[T any] struct {
 	selfIds []int64
 	Composer[T]
 	handlerEnds []HandlerEnd[T]
@@ -70,6 +70,17 @@ type consumer interface {
 	selfs() ([]int64, bool)
 	infos() []string
 	consume(ctx context.Context, emitter driver.Emitter, event event.Event) error
+}
+
+func SubEvent[T any](engine *Engine, eventype string) *EventHandler[T] {
+	handler := &EventHandler[T]{
+		log: engine.log,
+	}
+	// root a pointer to the beginning of the middleware chain
+	handler.root = handler
+
+	engine.consumers[eventype] = handler
+	return handler
 }
 
 // start handler all self event
