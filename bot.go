@@ -75,6 +75,7 @@ type consumer interface {
 // start handler all self event
 func OnEvent[T event.Eventer](engine *Engine) *EventHandler[T] {
 	eventHandler := new(EventHandler[T])
+	// root a pointer to the beginning of the middleware chain
 	eventHandler.root = eventHandler
 	eventHandler.log = engine.log
 
