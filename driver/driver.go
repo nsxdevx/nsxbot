@@ -53,7 +53,7 @@ type Response[T any] struct {
 	Echo    string `json:"echo"`
 }
 
-func contentToEvent(content []byte) (event.Event, error) {
+func Onebot11ContentToEvent(content []byte) (event.Event, error) {
 	strContent := string(content)
 	postType := gjson.Get(strContent, "post_type")
 	if !postType.Exists() {

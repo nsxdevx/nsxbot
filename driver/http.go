@@ -76,7 +76,7 @@ func (l *ListenerHttp) Listen(ctx context.Context, eventChan chan<- event.Event)
 			l.log.Error("Invalid content", "err", err)
 			return
 		}
-		botevent, err := contentToEvent(content)
+		botevent, err := Onebot11ContentToEvent(content)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			l.log.Error("Invalid event", "err", err)

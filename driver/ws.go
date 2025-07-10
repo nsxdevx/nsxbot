@@ -89,7 +89,6 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) er
 	for _, node := range ws.nodes {
 		go func(ctx context.Context) {
 			ticker := time.NewTicker(ws.retryDelay)
-			url := "ws://" + node.Url
 			for {
 				select {
 				case <-ctx.Done():
@@ -97,7 +96,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) er
 				case <-ticker.C:
 					header := make(http.Header, 1)
 					header.Set("Authorization", "Bearer "+node.Token)
-					c, _, err := websocket.DefaultDialer.Dial(url, header)
+					c, _, err := websocket.DefaultDialer.Dial(node.Url, header)
 					if err != nil {
 						ws.log.Error("Dial", "err", err)
 						continue
@@ -124,7 +123,7 @@ func (ws *WSClient) Listen(ctx context.Context, eventChan chan<- event.Event) er
 								return
 							}
 
-							botevent, err := contentToEvent(content)
+							botevent, err := Onebot11ContentToEvent(content)
 							if err != nil {
 								ws.log.Error("Invalid event", "err", err)
 								return
@@ -229,7 +228,7 @@ func (ws *WServer) Listen(ctx context.Context, eventChan chan<- event.Event) err
 					return
 				}
 
-				botevent, err := contentToEvent(content)
+				botevent, err := Onebot11ContentToEvent(content)
 				if err != nil {
 					ws.log.Error("Invalid event", "err", err)
 					return

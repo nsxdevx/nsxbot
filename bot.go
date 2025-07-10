@@ -72,12 +72,13 @@ type consumer interface {
 	consume(ctx context.Context, emitter driver.Emitter, event event.Event) error
 }
 
-func SubEvent[T any](engine *Engine, eventype string) *EventHandler[T] {
+func SubEvent[T any](engine *Engine, eventype string, selfIds ...int64) *EventHandler[T] {
 	handler := &EventHandler[T]{
 		log: engine.log,
 	}
 	// root a pointer to the beginning of the middleware chain
 	handler.root = handler
+	handler.Use(Recovery[T]())
 
 	engine.consumers[eventype] = handler
 	return handler
@@ -85,23 +86,14 @@ func SubEvent[T any](engine *Engine, eventype string) *EventHandler[T] {
 
 // start handler all self event
 func OnEvent[T event.Eventer](engine *Engine) *EventHandler[T] {
-	eventHandler := new(EventHandler[T])
-	// root a pointer to the beginning of the middleware chain
-	eventHandler.root = eventHandler
-	eventHandler.log = engine.log
-
-	eventHandler.Use(Recovery[T]())
-
 	var eventer T
-	engine.consumers[eventer.Type()] = eventHandler
-	return eventHandler
+	return SubEvent[T](engine, eventer.Type())
 }
 
 // start handler evnet by selfIds
 func OnSelfsEvent[T event.Eventer](engine *Engine, selfIds ...int64) *EventHandler[T] {
-	eventHandler := OnEvent[T](engine)
-	eventHandler.selfIds = selfIds
-	return eventHandler
+	var eventer T
+	return SubEvent[T](engine, eventer.Type(), selfIds...)
 }
 
 type Engine struct {
