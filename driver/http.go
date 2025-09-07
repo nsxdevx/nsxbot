@@ -359,6 +359,7 @@ func httpAction[P any, R any](ctx context.Context, client *http.Client, token st
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http status error code: %v", res.StatusCode)
 	}
