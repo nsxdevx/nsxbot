@@ -15,8 +15,15 @@ func main() {
 	defer cancel()
 	bot := nsxbot.Default(driver.NewDriverHttp(":8080", "http://localhost:4000"))
 
-	gr := nsxbot.OnEvent[event.PrivateMessage](bot)
-	gr.Handle(func(ctx *nsxbot.Context[event.PrivateMessage]) {
+	pm := nsxbot.OnEvent[event.PrivateMessage](bot)
+	
+	pm.Compose(filter.OnCommand[event.PrivateMessage]("/", "ping")).Handle(func(ctx *nsxbot.Context[event.PrivateMessage]) {
+		if err := ctx.Msg.Reply(ctx, "pong"); err != nil {
+			ctx.Log.Debug("Failed to reply pong", "error", err)
+		}
+	})
+
+	pm.Handle(func(ctx *nsxbot.Context[event.PrivateMessage]) {
 		text, err := ctx.Msg.TextFirst()
 		if err != nil {
 			slog.Error("Error parsing message", "error", err)
